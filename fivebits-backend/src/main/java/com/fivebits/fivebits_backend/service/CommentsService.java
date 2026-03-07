@@ -4,12 +4,14 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fivebits.fivebits_backend.model.Comments;
 import com.fivebits.fivebits_backend.repository.CommentsRepository;
 
 // @Service tells Spring this class contains business logic
 @Service
+@Transactional
 public class CommentsService {
 
     // @Autowired tells Spring to automatically create and inject
