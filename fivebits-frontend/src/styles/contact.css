@@ -1,0 +1,23 @@
+.contact-box {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 2rem;
+}
+
+.contact-box h1 {
+    margin: 2px;
+}
+
+.contact-box p {
+    line-height: 1.5rem;
+}
+
+.contact-box .heading {
+    display: flex;
+    align-items: center;
+}
+
+.contact-box .heading img {
+    height: 5vh;
+    margin-left: 1rem;
+}

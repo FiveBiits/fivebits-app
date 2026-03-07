@@ -1,0 +1,17 @@
+.about-box {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 2rem;
+}
+
+.about-box h1 {
+    margin: 2px;
+}
+
+.about-box p {
+    line-height: 1.5rem;
+}
+
+.about-box ul {
+    list-style-type: none;
+}

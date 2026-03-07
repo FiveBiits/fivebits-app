@@ -1,0 +1,14 @@
+.home-box {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 2rem;
+}
+
+.home-box h1 {
+    text-align: center;
+    margin: 2px;
+}
+
+.home-box p {
+    line-height: 1.5rem;
+}

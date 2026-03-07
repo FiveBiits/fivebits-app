@@ -1,0 +1,24 @@
+import '../styles/home.css';
+
+function Home() {
+  return (
+    <div className="home">
+      <div className="home-box">
+        <h1>+ OBJECTIVES +</h1>
+        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Laudantium corrupti eum sint nostrum quas nemo distinctio nulla temporibus doloremque, veritatis quasi cumque, aliquam, quaerat dignissimos quis consectetur laborum soluta natus necessitatibus rerum cum suscipit! Nisi perspiciatis fugit quisquam sint cum error quibusdam id, eligendi quidem tempora ipsum natus et, reiciendis laudantium, facere laborum ex vel accusamus atque quas rem eius excepturi. Minima animi quidem et suscipit nihil, id consequuntur saepe voluptatibus? Voluptate totam, porro laudantium tempora eius corrupti libero ut, qui beatae, unde iusto maxime ullam placeat temporibus? Ab repellendus tenetur consequuntur veritatis iure, incidunt eum iusto animi ducimus quam a laudantium odio vero, quis inventore ex eveniet amet dicta pariatur quo ipsa consequatur. Dolorem, quisquam delectus sequi beatae nulla itaque optio ea consectetur eaque amet maiores nemo aliquid voluptatum! Delectus saepe facere, labore velit sit laborum ad, aperiam accusamus, earum corrupti rem consectetur nostrum impedit minima qui sint repudiandae minus quaerat dolores sed eos incidunt harum veniam. Molestiae blanditiis nobis, mollitia doloribus quas suscipit perferendis omnis nihil fugit tempore eius quae soluta odio a praesentium ut sequi assumenda inventore animi esse quaerat dolorum tenetur aperiam! Cumque ab magni unde sunt suscipit, architecto enim harum velit sint dolorum. Repellendus, libero?</p>
+      </div>
+
+      <div className="home-box">
+        <h1>+ DELIVERIBLES +</h1>
+        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Laudantium corrupti eum sint nostrum quas nemo distinctio nulla temporibus doloremque, veritatis quasi cumque, aliquam, quaerat dignissimos quis consectetur laborum soluta natus necessitatibus rerum cum suscipit! Nisi perspiciatis fugit quisquam sint cum error quibusdam id, eligendi quidem tempora ipsum natus et, reiciendis laudantium, facere laborum ex vel accusamus atque quas rem eius excepturi. Minima animi quidem et suscipit nihil, id consequuntur saepe voluptatibus? Voluptate totam, porro laudantium tempora eius corrupti libero ut, qui beatae, unde iusto maxime ullam placeat temporibus? Ab repellendus tenetur consequuntur veritatis iure, incidunt eum iusto animi ducimus quam a laudantium odio vero, quis inventore ex eveniet amet dicta pariatur quo ipsa consequatur. Dolorem, quisquam delectus sequi beatae nulla itaque optio ea consectetur eaque amet maiores nemo aliquid voluptatum! Delectus saepe facere, labore velit sit laborum ad, aperiam accusamus, earum corrupti rem consectetur nostrum impedit minima qui sint repudiandae minus quaerat dolores sed eos incidunt harum veniam. Molestiae blanditiis nobis, mollitia doloribus quas suscipit perferendis omnis nihil fugit tempore eius quae soluta odio a praesentium ut sequi assumenda inventore animi esse quaerat dolorum tenetur aperiam! Cumque ab magni unde sunt suscipit, architecto enim harum velit sint dolorum. Repellendus, libero?</p>
+      </div>
+
+      <div className="home-box">
+        <h1>+ STAKE HOLDERS +</h1>
+        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Laudantium corrupti eum sint nostrum quas nemo distinctio nulla temporibus doloremque, veritatis quasi cumque, aliquam, quaerat dignissimos quis consectetur laborum soluta natus necessitatibus rerum cum suscipit! Nisi perspiciatis fugit quisquam sint cum error quibusdam id, eligendi quidem tempora ipsum natus et, reiciendis laudantium, facere laborum ex vel accusamus atque quas rem eius excepturi. Minima animi quidem et suscipit nihil, id consequuntur saepe voluptatibus? Voluptate totam, porro laudantium tempora eius corrupti libero ut, qui beatae, unde iusto maxime ullam placeat temporibus? Ab repellendus tenetur consequuntur veritatis iure, incidunt eum iusto animi ducimus quam a laudantium odio vero, quis inventore ex eveniet amet dicta pariatur quo ipsa consequatur. Dolorem, quisquam delectus sequi beatae nulla itaque optio ea consectetur eaque amet maiores nemo aliquid voluptatum! Delectus saepe facere, labore velit sit laborum ad, aperiam accusamus, earum corrupti rem consectetur nostrum impedit minima qui sint repudiandae minus quaerat dolores sed eos incidunt harum veniam. Molestiae blanditiis nobis, mollitia doloribus quas suscipit perferendis omnis nihil fugit tempore eius quae soluta odio a praesentium ut sequi assumenda inventore animi esse quaerat dolorum tenetur aperiam! Cumque ab magni unde sunt suscipit, architecto enim harum velit sint dolorum. Repellendus, libero?</p>
+      </div>
+    </div>
+  );
+}
+
+export default Home;

@@ -1,0 +1,23 @@
+.services-box {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 2rem;
+}
+
+.services-box h1 {
+    margin: 2px;
+}
+
+.services-box p {
+    line-height: 1.5rem;
+}
+
+.services-box .heading {
+    display: flex;
+    align-items: center;
+}
+
+.services-box .heading img {
+    height: 6vh;
+    margin-left: 1rem;
+}
