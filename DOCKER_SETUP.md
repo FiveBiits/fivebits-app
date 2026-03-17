@@ -83,7 +83,7 @@ Backend environment variables are configured in `docker-compose.yml`. To overrid
 ```
 SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/commentsdb
 SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=64820
+SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-<your-db-password>}
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
 SERVER_PORT=8080
 ```
