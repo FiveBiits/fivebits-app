@@ -5,6 +5,7 @@
 
 # Docker
 docker-compose.override.yml
+docker-compose.yml
 
 # IDE
 .idea/
