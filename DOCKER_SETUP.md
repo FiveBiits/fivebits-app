@@ -26,8 +26,8 @@
 - Container: `fivebits-postgres`
 - Port: 5432
 - Database: `commentsdb`
-- Username: `postgres`
-- Password: `64820`
+- Username: `postgres`  
+- Password: `<your-db-password>`  
 
 ### Spring Boot Backend
 - Container: `fivebits-backend`
