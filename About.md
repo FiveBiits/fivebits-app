@@ -56,3 +56,12 @@ To overcome these problems, this project proposes a **centralized software appli
 | 240058A | Bandara V.M.V.A. |
 | 240721C | Wijenayake W.M.P.S. |
 | 240005K | Abegunawardhana A.D. |
+
+---
+
+## Project Info
+
+STARTED ON 2026
+PROJECT FOR SEMESTER 2 CS1040 MODULE
+UNIVERSITY OF MORATUWA
+SRI LANKA
