@@ -277,9 +277,7 @@
   height: 100%;
 }
 
-/* ══════════════════════════════
-   RESPONSIVE BREAKPOINTS
-══════════════════════════════ */
+
 
 /* Tablet: show icons alongside text, shrink gaps */
 @media (max-width: 768px) {

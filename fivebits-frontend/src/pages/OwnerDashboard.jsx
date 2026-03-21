@@ -4,80 +4,88 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/dashboard.css';
 
 export default function OwnerDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => { logout(); navigate('/'); };
+  const stats = [
+    { label: 'Active Listings',  value: '0' },
+    { label: 'Total Inquiries',  value: '0' },
+    { label: 'Current Tenants',  value: '0' },
+    { label: 'Available Rooms',  value: '0' },
+  ];
+
+  const navItems = [
+    {
+      label: 'Dashboard',
+      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+      active: true,
+    },
+    {
+      label: 'My Listings',
+      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>,
+    },
+    {
+      label: 'Inquiries',
+      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    },
+    {
+      label: 'My Profile',
+      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    },
+  ];
 
   return (
-    <div className="dash-page">
+    <div className="db-page">
+      <div className="db-wrapper">
 
-      {/* Mobile topbar */}
-      <div className="dash-topbar">
-        <button className="dash-hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <span /><span /><span />
-        </button>
-        <span className="dash-topbar-title">FiveBits</span>
-        <div className="dash-topbar-avatar">{user?.name?.charAt(0).toUpperCase()}</div>
-      </div>
-
-      {sidebarOpen && <div className="dash-overlay" onClick={() => setSidebarOpen(false)} />}
-
-      <aside className={`dash-sidebar ${sidebarOpen ? 'dash-sidebar--open' : ''}`}>
-        <div className="dash-logo">FiveBits</div>
-        <nav className="dash-nav">
-          <a href="#" className="dash-navlink">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            Dashboard
-          </a>
-          <a href="#" className="dash-navlink">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Listing
-          </a>
-          <a href="#" className="dash-navlink">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
-            My Listings
-          </a>
-          <a href="#" className="dash-navlink">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Inquiries
-          </a>
-          <a href="#" className="dash-navlink">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            My Profile
-          </a>
-        </nav>
-        <button onClick={handleLogout} className="dash-logout">Logout</button>
-      </aside>
-
-      <main className="dash-main">
-        <div className="dash-header">
+        {/* ── Page header ── */}
+        <div className="db-header">
           <div>
-            <h1 className="dash-greeting">Owner Dashboard</h1>
-            <p className="dash-sub">Manage your listings, {user?.name}.</p>
+            <p className="db-label">OWNER DASHBOARD</p>
+            <h1 className="db-greeting">Welcome back, {user?.name}.</h1>
+            <p className="db-sub">Manage your listings and track your rentals.</p>
           </div>
-          <button className="dash-add-btn">+ Add New Listing</button>
+          <button className="db-add-btn" onClick={() => navigate('#')}>
+            + Add New Listing
+          </button>
         </div>
 
-        <div className="dash-grid dash-grid--4">
-          {[
-            { label: 'Active Listings',  value: '0' },
-            { label: 'Total Inquiries',  value: '0' },
-            { label: 'Current Tenants',  value: '0' },
-            { label: 'Available Rooms',  value: '0' },
-          ].map((s) => (
-            <div key={s.label} className="dash-card">
-              <span className="dash-card-value">{s.value}</span>
-              <span className="dash-card-label">{s.label}</span>
+        {/* ── Tab nav ── */}
+        <nav className="db-tabs">
+          {navItems.map((item) => (
+            <button
+              key={item.label}
+              className={`db-tab ${item.active ? 'db-tab--active' : ''}`}
+            >
+              <span className="db-tab-icon">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* ── Stats ── */}
+        <div className="db-stats">
+          {stats.map((s) => (
+            <div key={s.label} className="db-stat-card">
+              <span className="db-stat-value">{s.value}</span>
+              <span className="db-stat-label">{s.label}</span>
             </div>
           ))}
         </div>
 
-        <div className="dash-placeholder">
-          You have no listings yet. Click <strong>+ Add New Listing</strong> to get started.
+        {/* ── Empty state ── */}
+        <div className="db-empty">
+          <div className="db-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
+              <path d="M9 21V12h6v9"/>
+            </svg>
+          </div>
+          <p className="db-empty-title">No listings yet</p>
+          <p className="db-empty-sub">Click <strong>+ Add New Listing</strong> to get started.</p>
         </div>
-      </main>
+
+      </div>
     </div>
   );
 }

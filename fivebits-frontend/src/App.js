@@ -26,8 +26,9 @@ const pageTitles = {
   '/owner/dashboard':   'Dashboard | FiveBits',
 };
 
-const noFooterRoutes = ['/signin', '/signup', '/student/dashboard', '/owner/dashboard'];
-const noNavbarRoutes = ['/student/dashboard', '/owner/dashboard'];
+// Navbar is now shown on dashboard routes too
+const noFooterRoutes = ['/signin', '/signup'];
+const noNavbarRoutes = ['/signin', '/signup'];
 
 function AppContent() {
   const location = useLocation();
