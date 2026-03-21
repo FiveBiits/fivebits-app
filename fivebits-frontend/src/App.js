@@ -27,8 +27,8 @@ const pageTitles = {
 };
 
 // Navbar is now shown on dashboard routes too
-const noFooterRoutes = ['/signin', '/signup'];
-const noNavbarRoutes = ['/signin', '/signup'];
+const noFooterRoutes = [];
+const noNavbarRoutes = [];
 
 function AppContent() {
   const location = useLocation();
