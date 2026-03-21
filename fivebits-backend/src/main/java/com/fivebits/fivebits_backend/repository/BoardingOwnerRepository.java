@@ -4,5 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.fivebits.fivebits_backend.model.BoardingOwner;
 
-public interface BoardingOwnerRepository extends JpaRepository<BoardingOwner, String> {
+public interface BoardingOwnerRepository extends JpaRepository<BoardingOwner, Long> {
 }
