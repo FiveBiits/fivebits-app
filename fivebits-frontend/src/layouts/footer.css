@@ -5,20 +5,33 @@
   padding: 16px 32px;
   background-color: #ffffff;
   border-top: 1px solid #898989;
+  gap: 16px;
 }
 
 .footer-logo img {
-  display: flex;
   height: 4vh;
-} 
+  display: block;
+  flex-shrink: 0;
+}
 
 .footer p {
   text-align: center;
+  font-size: 0.85rem;
+  margin: 0;
+  flex: 1;
 }
 
-.footer-logo.left {
-  margin-right: 16px;
-}
-.footer-logo.right {
-  margin-left: 16px;
+@media (max-width: 600px) {
+  .footer {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .footer p {
+    font-size: 0.72rem;
+  }
+
+  .footer-logo img {
+    height: 3vh;
+  }
 }

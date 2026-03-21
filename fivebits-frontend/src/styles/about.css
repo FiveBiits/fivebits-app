@@ -1,17 +1,32 @@
 .about-box {
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem;
 }
 
 .about-box h1 {
-    margin: 2px;
+  margin: 2px;
 }
 
 .about-box p {
-    line-height: 1.5rem;
+  line-height: 1.5rem;
 }
 
 .about-box ul {
-    list-style-type: none;
+  list-style-type: none;
+}
+
+@media (max-width: 600px) {
+  .about-box {
+    padding: 1rem;
+  }
+
+  .about-box h1 {
+    font-size: 1.1rem;
+  }
+
+  .about-box p,
+  .about-box ul {
+    font-size: 0.9rem;
+  }
 }

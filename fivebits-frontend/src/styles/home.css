@@ -1,14 +1,27 @@
 .home-box {
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem;
 }
 
 .home-box h1 {
-    text-align: center;
-    margin: 2px;
+  margin: 2px;
 }
 
 .home-box p {
-    line-height: 1.5rem;
+  line-height: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .home-box {
+    padding: 1rem;
+  }
+
+  .home-box h1 {
+    font-size: 1.1rem;
+  }
+
+  .home-box p {
+    font-size: 0.9rem;
+  }
 }

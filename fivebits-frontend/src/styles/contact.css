@@ -1,23 +1,41 @@
 .contact-box {
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem;
 }
 
 .contact-box h1 {
-    margin: 2px;
+  margin: 2px;
 }
 
 .contact-box p {
-    line-height: 1.5rem;
+  line-height: 1.5rem;
 }
 
 .contact-box .heading {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .contact-box .heading img {
-    height: 5vh;
-    margin-left: 1rem;
+  height: 5vh;
+  margin-left: 1rem;
+}
+
+@media (max-width: 600px) {
+  .contact-box {
+    padding: 1rem;
+  }
+
+  .contact-box h1 {
+    font-size: 1.1rem;
+  }
+
+  .contact-box p {
+    font-size: 0.9rem;
+  }
+
+  .contact-box .heading img {
+    height: 4vh;
+  }
 }
