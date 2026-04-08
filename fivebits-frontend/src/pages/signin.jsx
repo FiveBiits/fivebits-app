@@ -1,71 +1,57 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { login } from '../services/authService';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { login } from '../services/authService';
 import '../styles/auth.css';
 
 export default function SignIn() {
-  const { login: saveAuth } = useAuth();
-  const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const { login: authLogin } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const { data } = await login(form);
-      saveAuth(data.token, {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        userType: data.userType,
-      });
-      navigate(data.userType === 'STUDENT' ? '/student/dashboard' : '/owner/dashboard');
+      const res = await login(form);
+      const data = res.data;
+      authLogin(data.token, { id: data.id, name: data.name, email: data.email, userType: data.userType });
+      navigate(data.userType === 'OWNER' ? '/owner/dashboard' : '/student/dashboard');
     } catch (err) {
-      const message =
-        err.response?.data?.message ||
-        err.response?.data ||
-        err.message ||
-        'Invalid credentials. Please try again.';
-      setError(String(message));
+      setError(err.response?.data || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
+    <main className="auth-page">
       <div className="auth-card">
-        <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Sign in to your account</p>
-
+        <div className="auth-header">
+          <h1>Welcome Back</h1>
+          <p>Sign in to your FiveBits account</p>
+        </div>
         {error && <div className="auth-error">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email</label>
-            <input type="email" name="email" value={form.email}
-              onChange={handleChange} placeholder="you@example.com" required />
+            <label>Email Address</label>
+            <input type="email" placeholder="you@example.com" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input type="password" name="password" value={form.password}
-              onChange={handleChange} placeholder="••••••••" required />
+            <input type="password" placeholder="Enter your password" required value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
           </div>
-          <button type="submit" className="auth-btn" disabled={loading}>
+          <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        <p className="auth-switch">
+        <div className="auth-footer">
           Don't have an account? <Link to="/signup">Sign Up</Link>
-        </p>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

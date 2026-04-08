@@ -1,92 +1,176 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { getStudentStats } from '../services/dashboardService';
+import { getStudentBookings, cancelBooking } from '../services/bookingService';
+import { getStudentPayments } from '../services/paymentService';
+import { getStudentIssues, submitIssue } from '../services/issueService';
+import { HiOutlineHome, HiOutlineCurrencyDollar, HiOutlineExclamationCircle, HiOutlineClipboardDocumentList } from 'react-icons/hi2';
 import '../styles/dashboard.css';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [tab, setTab] = useState('overview');
+  const [stats, setStats] = useState({});
+  const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [issues, setIssues] = useState([]);
+  const [issueForm, setIssueForm] = useState({ placeId: '', description: '' });
+  const [msg, setMsg] = useState('');
 
-  const stats = [
-    { label: 'Available Boardings', value: '24' },
-    { label: 'Saved Places',        value: '3'  },
-    { label: 'Applications Sent',   value: '1'  },
-  ];
+  useEffect(() => {
+    if (user?.id) {
+      getStudentStats(user.id).then(r => setStats(r.data)).catch(() => {});
+      getStudentBookings(user.id).then(r => setBookings(r.data)).catch(() => {});
+      getStudentPayments(user.id).then(r => setPayments(r.data)).catch(() => {});
+      getStudentIssues(user.id).then(r => setIssues(r.data)).catch(() => {});
+    }
+  }, [user]);
 
-  const navItems = [
-    {
-      label: 'Dashboard',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
-      active: true,
-    },
-    {
-      label: 'Browse Boardings',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-    },
-    {
-      label: 'Saved Places',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
-    },
-    {
-      label: 'My Applications',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
-    },
-    {
-      label: 'My Profile',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-    },
-  ];
+  const handleCancelBooking = async (id) => {
+    try {
+      await cancelBooking(id);
+      setBookings(bookings.map(b => b.id === id ? {...b, status: 'CANCELLED'} : b));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleSubmitIssue = async (e) => {
+    e.preventDefault();
+    try {
+      await submitIssue({ studentId: user.id, placeId: Number(issueForm.placeId), description: issueForm.description });
+      setMsg('Issue submitted successfully');
+      setIssueForm({ placeId: '', description: '' });
+      getStudentIssues(user.id).then(r => setIssues(r.data));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (err) { setMsg(err.response?.data || 'Failed to submit issue'); }
+  };
+
+  const statusBadge = (status) => {
+    const map = { REQUESTED: 'badge-warning', CONFIRMED: 'badge-info', ACTIVE: 'badge-success', COMPLETED: 'badge-neutral', CANCELLED: 'badge-danger', SUCCESSFUL: 'badge-success', RECEIPT_GENERATED: 'badge-success', CREATED: 'badge-warning', PROCESSING: 'badge-info', FAILED: 'badge-danger', SUBMITTED: 'badge-warning', ASSIGNED: 'badge-info', IN_PROGRESS: 'badge-info', RESOLVED: 'badge-success', CLOSED: 'badge-neutral' };
+    return <span className={`badge ${map[status] || 'badge-neutral'}`}>{status}</span>;
+  };
 
   return (
-    <div className="db-page">
-      <div className="db-wrapper">
-
-        {/* ── Page header ── */}
-        <div className="db-header">
-          <div>
-            <p className="db-label">STUDENT DASHBOARD</p>
-            <h1 className="db-greeting">Welcome back, {user?.name}.</h1>
-            <p className="db-sub">Find your perfect boarding place.</p>
-          </div>
-          <button className="db-add-btn" onClick={() => navigate('#')}>
-            Browse Boardings
-          </button>
+    <main className="dashboard">
+      <div className="dash-header">
+        <div>
+          <h1>Welcome back, {user?.name}</h1>
+          <p>Manage your boarding place, payments, and more</p>
         </div>
-
-        {/* ── Tab nav ── */}
-        <nav className="db-tabs">
-          {navItems.map((item) => (
-            <button
-              key={item.label}
-              className={`db-tab ${item.active ? 'db-tab--active' : ''}`}
-            >
-              <span className="db-tab-icon">{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {/* ── Stats ── */}
-        <div className="db-stats db-stats--3">
-          {stats.map((s) => (
-            <div key={s.label} className="db-stat-card">
-              <span className="db-stat-value">{s.value}</span>
-              <span className="db-stat-label">{s.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Empty state ── */}
-        <div className="db-empty">
-          <div className="db-empty-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-          </div>
-          <p className="db-empty-title">No listings found</p>
-          <p className="db-empty-sub">Browse available boarding places to get started.</p>
-        </div>
-
       </div>
-    </div>
+
+      <div className="stats-grid">
+        <div className="stat-card"><div className="stat-icon blue"><HiOutlineHome /></div><div><div className="stat-value">{stats.activeBookings || 0}</div><div className="stat-label">Active Bookings</div></div></div>
+        <div className="stat-card"><div className="stat-icon green"><HiOutlineCurrencyDollar /></div><div><div className="stat-value">{stats.totalPayments || 0}</div><div className="stat-label">Total Payments</div></div></div>
+        <div className="stat-card"><div className="stat-icon amber"><HiOutlineExclamationCircle /></div><div><div className="stat-value">{stats.pendingIssues || 0}</div><div className="stat-label">Pending Issues</div></div></div>
+        <div className="stat-card"><div className="stat-icon purple"><HiOutlineClipboardDocumentList /></div><div><div className="stat-value">{bookings.length}</div><div className="stat-label">Total Bookings</div></div></div>
+      </div>
+
+      <div className="dash-tabs">
+        <button className={`dash-tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
+        <button className={`dash-tab ${tab === 'bookings' ? 'active' : ''}`} onClick={() => setTab('bookings')}>My Bookings</button>
+        <button className={`dash-tab ${tab === 'payments' ? 'active' : ''}`} onClick={() => setTab('payments')}>Payments</button>
+        <button className={`dash-tab ${tab === 'issues' ? 'active' : ''}`} onClick={() => setTab('issues')}>Issues</button>
+      </div>
+
+      {tab === 'overview' && (
+        <div className="dash-section">
+          <h2>Recent Bookings</h2>
+          {bookings.length === 0 ? (
+            <div className="dash-empty"><h3>No bookings yet</h3><p>Browse boarding places to make your first booking</p></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Place</th><th>Location</th><th>Start Date</th><th>Status</th></tr></thead>
+              <tbody>
+                {bookings.slice(0, 5).map(b => (
+                  <tr key={b.id}><td>{b.placeName}</td><td>{b.placeLocation}</td><td>{b.startDate}</td><td>{statusBadge(b.status)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'bookings' && (
+        <div className="dash-section">
+          <h2>All Bookings</h2>
+          {bookings.length === 0 ? (
+            <div className="dash-empty"><h3>No bookings</h3><p>Browse boarding places to get started</p></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Place</th><th>Location</th><th>Price</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                {bookings.map(b => (
+                  <tr key={b.id}>
+                    <td>{b.placeName}</td>
+                    <td>{b.placeLocation}</td>
+                    <td>LKR {b.placePrice?.toLocaleString()}</td>
+                    <td>{b.startDate}</td>
+                    <td>{b.endDate || '—'}</td>
+                    <td>{statusBadge(b.status)}</td>
+                    <td>{(b.status === 'REQUESTED' || b.status === 'CONFIRMED') && <button className="btn btn-danger btn-sm" onClick={() => handleCancelBooking(b.id)}>Cancel</button>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'payments' && (
+        <div className="dash-section">
+          <h2>Payment History</h2>
+          {payments.length === 0 ? (
+            <div className="dash-empty"><h3>No payments yet</h3><p>Your payment history will appear here</p></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Place</th><th>Amount</th><th>Type</th><th>Method</th><th>Status</th><th>Date</th><th>Ref</th></tr></thead>
+              <tbody>
+                {payments.map(p => (
+                  <tr key={p.id}>
+                    <td>{p.placeName}</td>
+                    <td>LKR {p.amount?.toLocaleString()}</td>
+                    <td>{p.type}</td>
+                    <td>{p.method}</td>
+                    <td>{statusBadge(p.status)}</td>
+                    <td>{p.paidAt ? new Date(p.paidAt).toLocaleDateString() : '—'}</td>
+                    <td style={{fontSize: 12, fontFamily: 'monospace'}}>{p.transactionRef}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'issues' && (
+        <div className="dash-section">
+          <h2>Report & Track Issues</h2>
+          {msg && <div className="auth-error" style={{marginBottom: 16, background: msg.includes('success') ? '#d1fae5' : undefined, color: msg.includes('success') ? '#065f46' : undefined}}>{msg}</div>}
+          <form onSubmit={handleSubmitIssue} style={{marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap'}}>
+            <input className="form-group" style={{padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: '0 0 120px'}} type="number" placeholder="Place ID" required value={issueForm.placeId} onChange={e => setIssueForm({...issueForm, placeId: e.target.value})} />
+            <input className="form-group" style={{padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: 1}} placeholder="Describe the issue..." required value={issueForm.description} onChange={e => setIssueForm({...issueForm, description: e.target.value})} />
+            <button type="submit" className="btn btn-primary">Submit Issue</button>
+          </form>
+          {issues.length === 0 ? (
+            <div className="dash-empty"><h3>No issues reported</h3><p>Report maintenance issues here and track their progress</p></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Place</th><th>Description</th><th>Status</th><th>Reply</th><th>Submitted</th></tr></thead>
+              <tbody>
+                {issues.map(i => (
+                  <tr key={i.id}>
+                    <td>{i.placeName}</td>
+                    <td>{i.description}</td>
+                    <td>{statusBadge(i.status)}</td>
+                    <td>{i.reply || '—'}</td>
+                    <td>{new Date(i.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </main>
   );
 }

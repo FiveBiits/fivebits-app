@@ -1,77 +1,104 @@
 package com.fivebits.fivebits_backend.model;
 
-import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "boarding_places")
+@Data
+@NoArgsConstructor
 public class BoardingPlace {
 
     @Id
-    private String placeID;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private String location;
-    private double price;
+
+    private String address;
+
+    @Column(length = 2000)
     private String description;
+
+    @Column(nullable = false)
+    private double price;
+
+    private int totalRooms;
     private int availableRooms;
-    private Date createdDate;
 
-    // Optional: link to owner (simple way)
-    private String ownerID;
+    private String facilities;
 
-    public BoardingPlace() {}
+    private double latitude;
+    private double longitude;
 
-    public BoardingPlace(String placeID, String name, String location, double price, int availableRooms, String ownerID) {
-        this.placeID = placeID;
-        this.name = name;
-        this.location = location;
-        this.price = price;
-        this.availableRooms = availableRooms;
-        this.ownerID = ownerID;
-        this.createdDate = new Date();
+    private double rating;
+
+    private String imageUrl;
+
+    private boolean verified;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private BoardingOwner owner;
+
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Booking> bookings = new ArrayList<>();
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        if (this.rating == 0) this.rating = 0.0;
     }
 
-    // Methods
-
-    public void updateDetails(String name, String location, double price, int availableRooms) {
-        this.name = name;
-        this.location = location;
-        this.price = price;
-        this.availableRooms = availableRooms;
-    }
-
+    // Domain methods
     public void reduceAvailableRooms() {
-        if (availableRooms > 0) {
-            availableRooms--;
-        }
+        if (availableRooms > 0) availableRooms--;
     }
 
     public void increaseAvailableRooms() {
-        availableRooms++;
+        if (availableRooms < totalRooms) availableRooms++;
     }
 
-    // Getters and Setters
+    public double calculateDistance(double userLat, double userLon) {
+        final double R = 6371.0;
+        double lat1 = Math.toRadians(this.latitude);
+        double lat2 = Math.toRadians(userLat);
+        double dLat = Math.toRadians(userLat - this.latitude);
+        double dLon = Math.toRadians(userLon - this.longitude);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
 
-    public String getPlaceID() { return placeID; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
-
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public int getAvailableRooms() { return availableRooms; }
-    public void setAvailableRooms(int availableRooms) { this.availableRooms = availableRooms; }
-
-    public String getOwnerID() { return ownerID; }
-    public void setOwnerID(String ownerID) { this.ownerID = ownerID; }
-
-    public Date getCreatedDate() { return createdDate; }
+    public double calculateRankScore(double userLat, double userLon, double maxPrice) {
+        double distance = calculateDistance(userLat, userLon);
+        double distanceScore = Math.max(0, 100 - (distance * 10));
+        double priceScore = maxPrice > 0 ? Math.max(0, 100 - ((price / maxPrice) * 100)) : 50;
+        double ratingScore = rating * 20;
+        return (distanceScore * 0.4) + (priceScore * 0.3) + (ratingScore * 0.3);
+    }
 }

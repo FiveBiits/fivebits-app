@@ -1,54 +1,45 @@
 package com.fivebits.fivebits_backend.controller;
 
 import com.fivebits.fivebits_backend.model.Notification;
-import com.fivebits.fivebits_backend.repository.NotificationRepository;
+import com.fivebits.fivebits_backend.service.NotificationService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class NotificationController {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
-    public NotificationController(NotificationRepository notificationRepository) {
-        this.notificationRepository = notificationRepository;
+    @GetMapping("/user/{userId}")
+    public List<Notification> getUserNotifications(@PathVariable Long userId) {
+        return notificationService.getUserNotifications(userId);
     }
 
-    // GET ALL NOTIFICATIONS
-    @GetMapping
-    public List<Notification> getAllNotifications() {
-        return notificationRepository.findAll();
+    @GetMapping("/user/{userId}/unread")
+    public List<Notification> getUnreadNotifications(@PathVariable Long userId) {
+        return notificationService.getUnreadNotifications(userId);
     }
 
-    // CREATE NOTIFICATION
-    @PostMapping("/create")
-    public Notification createNotification(@RequestBody Notification notification) {
-        notification.setStatus("Unread");
-        return notificationRepository.save(notification);
+    @GetMapping("/user/{userId}/unread-count")
+    public Map<String, Long> getUnreadCount(@PathVariable Long userId) {
+        return Map.of("count", notificationService.getUnreadCount(userId));
     }
 
-    // GET USER NOTIFICATIONS
-    @GetMapping("/user/{userID}")
-    public List<Notification> getUserNotifications(@PathVariable String userID) {
-        return notificationRepository.findByUserID(userID);
-    }
-
-    // GET UNREAD NOTIFICATIONS
-    @GetMapping("/user/{userID}/unread")
-    public List<Notification> getUnreadNotifications(@PathVariable String userID) {
-        return notificationRepository.findByUserIDAndStatus(userID, "Unread");
-    }
-
-    // MARK AS READ
     @PatchMapping("/{id}/read")
-    public ResponseEntity<Notification> markAsRead(@PathVariable String id) {
-        return notificationRepository.findById(id).map(notification -> {
-            notification.markAsRead();
-            return ResponseEntity.ok(notificationRepository.save(notification));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> markAsRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/user/{userId}/read-all")
+    public ResponseEntity<?> markAllAsRead(@PathVariable Long userId) {
+        notificationService.markAllAsRead(userId);
+        return ResponseEntity.ok().build();
     }
 }

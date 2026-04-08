@@ -1,53 +1,52 @@
 package com.fivebits.fivebits_backend.model;
 
-import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "notifications")
+@Data
+@NoArgsConstructor
 public class Notification {
 
     @Id
-    private String notificationID;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private String userID;   // can be student / owner / admin
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(nullable = false)
     private String message;
-    private String type;     // Booking, Payment, Issue
-    private String status;   // Unread / Read
-    private Date createdDate;
 
-    public Notification() {}
+    private String type;  // BOOKING, PAYMENT, ISSUE
 
-    public Notification(String notificationID, String userID, String message, String type) {
-        this.notificationID = notificationID;
-        this.userID = userID;
-        this.message = message;
-        this.type = type;
-        this.status = "Unread";
-        this.createdDate = new Date();
+    @Column(nullable = false)
+    private String status;
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        if (this.status == null) this.status = "UNREAD";
     }
-
-    // Methods
 
     public void markAsRead() {
-        this.status = "Read";
+        this.status = "READ";
     }
-
-    // Getters and Setters
-
-    public String getNotificationID() { return notificationID; }
-
-    public String getUserID() { return userID; }
-    public void setUserID(String userID) { this.userID = userID; }
-
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public Date getCreatedDate() { return createdDate; }
 }

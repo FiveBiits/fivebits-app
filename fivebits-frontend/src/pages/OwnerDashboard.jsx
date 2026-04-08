@@ -1,91 +1,240 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { getOwnerStats } from '../services/dashboardService';
+import { getOwnerPlaces, createPlace, deletePlace } from '../services/placeService';
+import { getOwnerBookings, confirmBooking, cancelBooking } from '../services/bookingService';
+import { getOwnerPayments } from '../services/paymentService';
+import { getOwnerIssues, resolveIssue } from '../services/issueService';
+import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus } from 'react-icons/hi2';
 import '../styles/dashboard.css';
 
 export default function OwnerDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [tab, setTab] = useState('overview');
+  const [stats, setStats] = useState({});
+  const [listings, setListings] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [issues, setIssues] = useState([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [placeForm, setPlaceForm] = useState({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', imageUrl:'' });
+  const [resolveReply, setResolveReply] = useState({});
+  const [msg, setMsg] = useState('');
 
-  const stats = [
-    { label: 'Active Listings',  value: '0' },
-    { label: 'Total Inquiries',  value: '0' },
-    { label: 'Current Tenants',  value: '0' },
-    { label: 'Available Rooms',  value: '0' },
-  ];
+  const load = () => {
+    if (!user?.id) return;
+    getOwnerStats(user.id).then(r => setStats(r.data)).catch(() => {});
+    getOwnerPlaces(user.id).then(r => setListings(r.data)).catch(() => {});
+    getOwnerBookings(user.id).then(r => setBookings(r.data)).catch(() => {});
+    getOwnerPayments(user.id).then(r => setPayments(r.data)).catch(() => {});
+    getOwnerIssues(user.id).then(r => setIssues(r.data)).catch(() => {});
+  };
 
-  const navItems = [
-    {
-      label: 'Dashboard',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
-      active: true,
-    },
-    {
-      label: 'My Listings',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>,
-    },
-    {
-      label: 'Inquiries',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-    },
-    {
-      label: 'My Profile',
-      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-    },
-  ];
+  useEffect(load, [user]);
+
+  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
+
+  const handleAddPlace = async (e) => {
+    e.preventDefault();
+    try {
+      await createPlace(user.id, { ...placeForm, price: parseFloat(placeForm.price), totalRooms: parseInt(placeForm.totalRooms), availableRooms: parseInt(placeForm.availableRooms) });
+      flash('Boarding place added successfully');
+      setShowAddForm(false);
+      setPlaceForm({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', imageUrl:'' });
+      load();
+    } catch (err) { flash(err.response?.data || 'Failed to add place'); }
+  };
+
+  const handleDeletePlace = async (id) => {
+    try { await deletePlace(id); flash('Place deleted'); load(); } catch (err) { flash('Failed to delete'); }
+  };
+
+  const handleConfirm = async (id) => {
+    try { await confirmBooking(id); load(); flash('Booking confirmed'); } catch (err) { flash('Action failed'); }
+  };
+
+  const handleCancel = async (id) => {
+    try { await cancelBooking(id); load(); flash('Booking cancelled'); } catch (err) { flash('Action failed'); }
+  };
+
+  const handleResolve = async (id) => {
+    try { await resolveIssue(id, resolveReply[id] || ''); flash('Issue resolved'); load(); } catch (err) { flash('Failed to resolve'); }
+  };
+
+  const statusBadge = (status) => {
+    const map = { REQUESTED: 'badge-warning', CONFIRMED: 'badge-info', ACTIVE: 'badge-success', COMPLETED: 'badge-neutral', CANCELLED: 'badge-danger', SUCCESSFUL: 'badge-success', RECEIPT_GENERATED: 'badge-success', CREATED: 'badge-warning', PROCESSING: 'badge-info', FAILED: 'badge-danger', SUBMITTED: 'badge-warning', ASSIGNED: 'badge-info', IN_PROGRESS: 'badge-info', RESOLVED: 'badge-success', CLOSED: 'badge-neutral' };
+    return <span className={`badge ${map[status] || 'badge-neutral'}`}>{status}</span>;
+  };
+
+  const pf = (f) => (e) => setPlaceForm({...placeForm, [f]: e.target.value});
 
   return (
-    <div className="db-page">
-      <div className="db-wrapper">
-
-        {/* ── Page header ── */}
-        <div className="db-header">
-          <div>
-            <p className="db-label">OWNER DASHBOARD</p>
-            <h1 className="db-greeting">Welcome back, {user?.name}.</h1>
-            <p className="db-sub">Manage your listings and track your rentals.</p>
-          </div>
-          <button className="db-add-btn" onClick={() => navigate('#')}>
-            + Add New Listing
-          </button>
-        </div>
-
-        {/* ── Tab nav ── */}
-        <nav className="db-tabs">
-          {navItems.map((item) => (
-            <button
-              key={item.label}
-              className={`db-tab ${item.active ? 'db-tab--active' : ''}`}
-            >
-              <span className="db-tab-icon">{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {/* ── Stats ── */}
-        <div className="db-stats">
-          {stats.map((s) => (
-            <div key={s.label} className="db-stat-card">
-              <span className="db-stat-value">{s.value}</span>
-              <span className="db-stat-label">{s.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Empty state ── */}
-        <div className="db-empty">
-          <div className="db-empty-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
-              <path d="M9 21V12h6v9"/>
-            </svg>
-          </div>
-          <p className="db-empty-title">No listings yet</p>
-          <p className="db-empty-sub">Click <strong>+ Add New Listing</strong> to get started.</p>
-        </div>
-
+    <main className="dashboard">
+      <div className="dash-header">
+        <div><h1>Owner Dashboard</h1><p>Manage your boarding places, bookings, and more</p></div>
       </div>
-    </div>
+
+      {msg && <div className="auth-error" style={{marginBottom: 16, background: msg.includes('success') || msg.includes('confirmed') || msg.includes('resolved') || msg.includes('deleted') ? '#d1fae5' : undefined, color: msg.includes('success') || msg.includes('confirmed') || msg.includes('resolved') || msg.includes('deleted') ? '#065f46' : undefined}}>{msg}</div>}
+
+      <div className="stats-grid">
+        <div className="stat-card"><div className="stat-icon blue"><HiOutlineBuildingOffice /></div><div><div className="stat-value">{stats.activeListings || 0}</div><div className="stat-label">Active Listings</div></div></div>
+        <div className="stat-card"><div className="stat-icon green"><HiOutlineUsers /></div><div><div className="stat-value">{stats.currentTenants || 0}</div><div className="stat-label">Current Tenants</div></div></div>
+        <div className="stat-card"><div className="stat-icon amber"><HiOutlineBanknotes /></div><div><div className="stat-value">LKR {(stats.totalRevenue || 0).toLocaleString()}</div><div className="stat-label">Total Revenue</div></div></div>
+        <div className="stat-card"><div className="stat-icon red"><HiOutlineExclamationTriangle /></div><div><div className="stat-value">{stats.totalInquiries || 0}</div><div className="stat-label">Pending Inquiries</div></div></div>
+      </div>
+
+      <div className="dash-tabs">
+        <button className={`dash-tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
+        <button className={`dash-tab ${tab === 'listings' ? 'active' : ''}`} onClick={() => setTab('listings')}>My Listings</button>
+        <button className={`dash-tab ${tab === 'bookings' ? 'active' : ''}`} onClick={() => setTab('bookings')}>Bookings</button>
+        <button className={`dash-tab ${tab === 'payments' ? 'active' : ''}`} onClick={() => setTab('payments')}>Payments</button>
+        <button className={`dash-tab ${tab === 'issues' ? 'active' : ''}`} onClick={() => setTab('issues')}>Issues</button>
+      </div>
+
+      {tab === 'overview' && (
+        <div className="dash-section">
+          <h2>Recent Bookings</h2>
+          {bookings.length === 0 ? (
+            <div className="dash-empty"><h3>No bookings yet</h3><p>Bookings will appear once students start requesting</p></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Student</th><th>Place</th><th>Start</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                {bookings.slice(0, 5).map(b => (
+                  <tr key={b.id}>
+                    <td>{b.studentName}</td>
+                    <td>{b.placeName}</td>
+                    <td>{b.startDate}</td>
+                    <td>{statusBadge(b.status)}</td>
+                    <td>{b.status === 'REQUESTED' && <><button className="btn btn-success btn-sm" onClick={() => handleConfirm(b.id)}>Confirm</button>{' '}<button className="btn btn-danger btn-sm" onClick={() => handleCancel(b.id)}>Decline</button></>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'listings' && (
+        <div className="dash-section">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
+            <h2 style={{margin: 0}}>My Boarding Places</h2>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAddForm(!showAddForm)}><HiPlus /> {showAddForm ? 'Cancel' : 'Add New'}</button>
+          </div>
+
+          {showAddForm && (
+            <form className="add-listing-form" onSubmit={handleAddPlace} style={{marginBottom: 24, padding: 20, border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)'}}>
+              <div className="form-group"><label>Name</label><input required value={placeForm.name} onChange={pf('name')} /></div>
+              <div className="form-group"><label>Location</label><input required value={placeForm.location} onChange={pf('location')} /></div>
+              <div className="form-group full"><label>Address</label><input value={placeForm.address} onChange={pf('address')} /></div>
+              <div className="form-group"><label>Monthly Price (LKR)</label><input type="number" required value={placeForm.price} onChange={pf('price')} /></div>
+              <div className="form-group"><label>Total Rooms</label><input type="number" required value={placeForm.totalRooms} onChange={pf('totalRooms')} /></div>
+              <div className="form-group"><label>Available Rooms</label><input type="number" required value={placeForm.availableRooms} onChange={pf('availableRooms')} /></div>
+              <div className="form-group"><label>Facilities (comma separated)</label><input value={placeForm.facilities} onChange={pf('facilities')} placeholder="WiFi, AC, Kitchen" /></div>
+              <div className="form-group full"><label>Description</label><input value={placeForm.description} onChange={pf('description')} /></div>
+              <div className="form-group full"><label>Image URL</label><input value={placeForm.imageUrl} onChange={pf('imageUrl')} /></div>
+              <button type="submit" className="btn btn-primary" style={{gridColumn:'1/-1'}}>Add Boarding Place</button>
+            </form>
+          )}
+
+          {listings.length === 0 ? (
+            <div className="dash-empty"><h3>No listings yet</h3><p>Add your first boarding place to get started</p></div>
+          ) : (
+            listings.map(l => (
+              <div className="listing-card" key={l.id}>
+                <div className="listing-info">
+                  <h4>{l.name} {l.verified && <span className="badge badge-success">Verified</span>}</h4>
+                  <p>{l.location} — LKR {l.price?.toLocaleString()}/mo — {l.availableRooms}/{l.totalRooms} rooms available</p>
+                </div>
+                <div className="listing-actions">
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDeletePlace(l.id)}>Delete</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {tab === 'bookings' && (
+        <div className="dash-section">
+          <h2>All Bookings</h2>
+          {bookings.length === 0 ? (
+            <div className="dash-empty"><h3>No bookings</h3></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Student</th><th>Place</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                {bookings.map(b => (
+                  <tr key={b.id}>
+                    <td>{b.studentName}</td>
+                    <td>{b.placeName}</td>
+                    <td>{b.startDate}</td>
+                    <td>{b.endDate || '—'}</td>
+                    <td>{statusBadge(b.status)}</td>
+                    <td>{b.status === 'REQUESTED' && <><button className="btn btn-success btn-sm" onClick={() => handleConfirm(b.id)}>Confirm</button>{' '}<button className="btn btn-danger btn-sm" onClick={() => handleCancel(b.id)}>Decline</button></>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'payments' && (
+        <div className="dash-section">
+          <h2>Received Payments</h2>
+          {payments.length === 0 ? (
+            <div className="dash-empty"><h3>No payments received</h3></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Student</th><th>Place</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                {payments.map(p => (
+                  <tr key={p.id}>
+                    <td>{p.studentName}</td>
+                    <td>{p.placeName}</td>
+                    <td>LKR {p.amount?.toLocaleString()}</td>
+                    <td>{p.method}</td>
+                    <td>{statusBadge(p.status)}</td>
+                    <td>{p.paidAt ? new Date(p.paidAt).toLocaleDateString() : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'issues' && (
+        <div className="dash-section">
+          <h2>Issue Reports</h2>
+          {issues.length === 0 ? (
+            <div className="dash-empty"><h3>No issues reported</h3></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Student</th><th>Place</th><th>Description</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                {issues.map(i => (
+                  <tr key={i.id}>
+                    <td>{i.studentName}</td>
+                    <td>{i.placeName}</td>
+                    <td>{i.description}</td>
+                    <td>{statusBadge(i.status)}</td>
+                    <td>
+                      {(i.status === 'SUBMITTED' || i.status === 'ASSIGNED' || i.status === 'IN_PROGRESS') && (
+                        <div style={{display: 'flex', gap: 6}}>
+                          <input style={{padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: 12, width: 120}} placeholder="Reply..." value={resolveReply[i.id] || ''} onChange={e => setResolveReply({...resolveReply, [i.id]: e.target.value})} />
+                          <button className="btn btn-success btn-sm" onClick={() => handleResolve(i.id)}>Resolve</button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </main>
   );
 }

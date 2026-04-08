@@ -5,11 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface NotificationRepository extends JpaRepository<Notification, String> {
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    // Get notifications for a specific user
-    List<Notification> findByUserID(String userID);
+    List<Notification> findByUserId(Long userId);
 
-    // Get unread notifications
-    List<Notification> findByUserIDAndStatus(String userID, String status);
+    List<Notification> findByUserIdAndStatus(Long userId, String status);
+
+    long countByUserIdAndStatus(Long userId, String status);
 }

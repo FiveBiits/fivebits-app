@@ -13,6 +13,7 @@ import SignIn from './pages/signin';
 import SignUp from './pages/signup';
 import StudentDashboard from './pages/StudentDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
+import Browse from './pages/browse';
 import PrivateRoute from './components/PrivateRoute';
 
 const pageTitles = {
@@ -22,6 +23,7 @@ const pageTitles = {
   '/services':          'Services | FiveBits',
   '/signin':            'Sign In | FiveBits',
   '/signup':            'Sign Up | FiveBits',
+  '/browse':            'Browse Boarding Places | FiveBits',
   '/student/dashboard': 'Dashboard | FiveBits',
   '/owner/dashboard':   'Dashboard | FiveBits',
 };
@@ -50,6 +52,7 @@ function AppContent() {
         <Route path="/services" element={<Services />} />
         <Route path="/signin"  element={<SignIn />} />
         <Route path="/signup"  element={<SignUp />} />
+        <Route path="/browse"  element={<Browse />} />
         <Route path="/student/dashboard" element={
           <PrivateRoute role="STUDENT"><StudentDashboard /></PrivateRoute>
         } />

@@ -1,68 +1,57 @@
 package com.fivebits.fivebits_backend.controller;
 
-import java.util.List;
-
+import com.fivebits.fivebits_backend.dto.BookingRequest;
+import com.fivebits.fivebits_backend.dto.BookingResponse;
+import com.fivebits.fivebits_backend.service.BookingService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.fivebits.fivebits_backend.model.Booking;
-import com.fivebits.fivebits_backend.repository.BookingRepository;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class BookingController {
 
-    private final BookingRepository bookingRepository;
+    private final BookingService bookingService;
 
-    public BookingController(BookingRepository bookingRepository) {
-        this.bookingRepository = bookingRepository;
-    }
-
-    // GET ALL BOOKINGS
-    @GetMapping
-    public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
-    }
-
-    // CREATE BOOKING (State: Requested)
     @PostMapping("/create")
-    public Booking createBooking(@RequestBody Booking booking) {
-        booking.setStatus("Requested");
-        return bookingRepository.save(booking);
+    public ResponseEntity<?> createBooking(@RequestBody BookingRequest request) {
+        try {
+            return ResponseEntity.ok(bookingService.createBooking(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // CONFIRM BOOKING
     @PatchMapping("/{id}/confirm")
-    public ResponseEntity<Booking> confirmBooking(@PathVariable String id) {
-        return bookingRepository.findById(id).map(booking -> {
-            booking.confirmBooking();
-            return ResponseEntity.ok(bookingRepository.save(booking));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<BookingResponse> confirmBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.confirmBooking(id));
     }
 
-    // CANCEL BOOKING
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<Booking> cancelBooking(@PathVariable String id) {
-        return bookingRepository.findById(id).map(booking -> {
-            booking.cancelBooking();
-            return ResponseEntity.ok(bookingRepository.save(booking));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<BookingResponse> cancelBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.cancelBooking(id));
     }
 
-    // COMPLETE BOOKING
     @PatchMapping("/{id}/complete")
-    public ResponseEntity<Booking> completeBooking(@PathVariable String id) {
-        return bookingRepository.findById(id).map(booking -> {
-            booking.completeBooking();
-            return ResponseEntity.ok(bookingRepository.save(booking));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<BookingResponse> completeBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.completeBooking(id));
+    }
+
+    @GetMapping("/student/{studentId}")
+    public List<BookingResponse> getStudentBookings(@PathVariable Long studentId) {
+        return bookingService.getStudentBookings(studentId);
+    }
+
+    @GetMapping("/owner/{ownerId}")
+    public List<BookingResponse> getOwnerBookings(@PathVariable Long ownerId) {
+        return bookingService.getOwnerBookings(ownerId);
+    }
+
+    @GetMapping("/place/{placeId}")
+    public List<BookingResponse> getPlaceBookings(@PathVariable Long placeId) {
+        return bookingService.getPlaceBookings(placeId);
     }
 }

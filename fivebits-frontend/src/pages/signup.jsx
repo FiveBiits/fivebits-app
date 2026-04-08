@@ -1,171 +1,113 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { signUp } from '../services/authService';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { signUp } from '../services/authService';
 import '../styles/auth.css';
 
 export default function SignUp() {
-  const { login: saveAuth } = useAuth();
-  const navigate = useNavigate();
-  const [userType, setUserType] = useState('STUDENT');
+  const [role, setRole] = useState('STUDENT');
+  const [form, setForm] = useState({ name:'', email:'', password:'', phoneNumber:'', university:'', courseOfStudy:'', studentId:'', businessName:'', address:'', nicNumber:'' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { login: authLogin } = useAuth();
+  const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: '', email: '', password: '', phoneNumber: '',
-    university: '', courseOfStudy: '', studentId: '',
-    businessName: '', address: '', nicNumber: '',
-  });
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const set = (field) => (e) => setForm({...form, [field]: e.target.value});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    const payload = {
-      name: form.name,
-      email: form.email,
-      password: form.password,
-      phoneNumber: form.phoneNumber,
-      userType,
-      ...(userType === 'STUDENT' && {
-        university: form.university,
-        courseOfStudy: form.courseOfStudy,
-        studentId: form.studentId,
-      }),
-      ...(userType === 'OWNER' && {
-        businessName: form.businessName,
-        address: form.address,
-        nicNumber: form.nicNumber,
-      }),
-    };
-
     try {
-      const { data } = await signUp(payload);
-      saveAuth(data.token, {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        userType: data.userType,
-      });
-      navigate(data.userType === 'STUDENT' ? '/student/dashboard' : '/owner/dashboard');
+      const res = await signUp({ ...form, userType: role });
+      const data = res.data;
+      authLogin(data.token, { id: data.id, name: data.name, email: data.email, userType: data.userType });
+      navigate(data.userType === 'OWNER' ? '/owner/dashboard' : '/student/dashboard');
     } catch (err) {
-      const message =
-        err.response?.data?.message ||
-        err.response?.data ||
-        err.message ||
-        'Registration failed. Please try again.';
-      setError(String(message));
+      setError(err.response?.data || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card auth-card--wide">
-        <h2 className="auth-title">Create Account</h2>
-        <p className="auth-subtitle">Join as a Student or Boarding Owner</p>
-
-        <div className="type-toggle">
-          <button type="button"
-            className={`type-btn ${userType === 'STUDENT' ? 'active' : ''}`}
-            onClick={() => setUserType('STUDENT')}>
-            Student
-          </button>
-          <button type="button"
-            className={`type-btn ${userType === 'OWNER' ? 'active' : ''}`}
-            onClick={() => setUserType('OWNER')}>
-            Boarding Owner
-          </button>
+    <main className="auth-page">
+      <div className="auth-card" style={{maxWidth: 520}}>
+        <div className="auth-header">
+          <h1>Create Account</h1>
+          <p>Join FiveBits as a student or boarding owner</p>
         </div>
-
         {error && <div className="auth-error">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="role-toggle">
+            <button type="button" className={role === 'STUDENT' ? 'active' : ''} onClick={() => setRole('STUDENT')}>Student</button>
+            <button type="button" className={role === 'OWNER' ? 'active' : ''} onClick={() => setRole('OWNER')}>Boarding Owner</button>
+          </div>
           <div className="form-row">
             <div className="form-group">
               <label>Full Name</label>
-              <input name="name" value={form.name} onChange={handleChange}
-                placeholder="John Doe" required />
+              <input type="text" placeholder="John Doe" required value={form.name} onChange={set('name')} />
             </div>
             <div className="form-group">
               <label>Phone Number</label>
-              <input name="phoneNumber" value={form.phoneNumber} onChange={handleChange}
-                placeholder="07X XXX XXXX" />
+              <input type="tel" placeholder="+94 77 123 4567" value={form.phoneNumber} onChange={set('phoneNumber')} />
             </div>
           </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Email</label>
-              <input type="email" name="email" value={form.email} onChange={handleChange}
-                placeholder="you@example.com" required />
-            </div>
-            <div className="form-group">
-              <label>Password</label>
-              <input type="password" name="password" value={form.password} onChange={handleChange}
-                placeholder="Min 8 characters" required minLength={8} />
-            </div>
+          <div className="form-group">
+            <label>Email Address</label>
+            <input type="email" placeholder="you@example.com" required value={form.email} onChange={set('email')} />
+          </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input type="password" placeholder="Create a strong password" required minLength={6} value={form.password} onChange={set('password')} />
           </div>
 
-          {userType === 'STUDENT' && (
-            <div className="form-section">
-              <h4 className="section-label">Student Details</h4>
+          {role === 'STUDENT' && (
+            <>
               <div className="form-row">
                 <div className="form-group">
                   <label>University</label>
-                  <input name="university" value={form.university} onChange={handleChange}
-                    placeholder="e.g. University of Kelaniya" />
+                  <input type="text" placeholder="University of Moratuwa" value={form.university} onChange={set('university')} />
                 </div>
                 <div className="form-group">
-                  <label>Course of Study</label>
-                  <input name="courseOfStudy" value={form.courseOfStudy} onChange={handleChange}
-                    placeholder="e.g. BSc Computer Science" />
+                  <label>Student ID</label>
+                  <input type="text" placeholder="240347J" value={form.studentId} onChange={set('studentId')} />
                 </div>
               </div>
               <div className="form-group">
-                <label>Student ID</label>
-                <input name="studentId" value={form.studentId} onChange={handleChange}
-                  placeholder="e.g. KLN/CS/2022/001" />
+                <label>Course of Study</label>
+                <input type="text" placeholder="Computer Science" value={form.courseOfStudy} onChange={set('courseOfStudy')} />
               </div>
-            </div>
+            </>
           )}
 
-          {userType === 'OWNER' && (
-            <div className="form-section">
-              <h4 className="section-label">Business Details</h4>
+          {role === 'OWNER' && (
+            <>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Business / Boarding Name</label>
-                  <input name="businessName" value={form.businessName} onChange={handleChange}
-                    placeholder="e.g. Sunny Boarding House" />
+                  <label>Business Name</label>
+                  <input type="text" placeholder="My Boarding House" value={form.businessName} onChange={set('businessName')} />
                 </div>
                 <div className="form-group">
                   <label>NIC Number</label>
-                  <input name="nicNumber" value={form.nicNumber} onChange={handleChange}
-                    placeholder="e.g. 200012345678" />
+                  <input type="text" placeholder="200012345678" value={form.nicNumber} onChange={set('nicNumber')} />
                 </div>
               </div>
               <div className="form-group">
                 <label>Address</label>
-                <input name="address" value={form.address} onChange={handleChange}
-                  placeholder="No. 12, Main Street, Kurunegala" />
+                <input type="text" placeholder="123 Main Street, Moratuwa" value={form.address} onChange={set('address')} />
               </div>
-            </div>
+            </>
           )}
 
-          <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? 'Creating account...' : 'Create Account'}
+          <button type="submit" className="auth-submit" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
-
-        <p className="auth-switch">
+        <div className="auth-footer">
           Already have an account? <Link to="/signin">Sign In</Link>
-        </p>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

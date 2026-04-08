@@ -1,0 +1,52 @@
+.browse-page { padding: 32px 0 64px; }
+.browse-header { margin-bottom: 32px; }
+.browse-header h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+.browse-header p { color: var(--text-secondary); font-size: 15px; }
+
+.browse-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+.browse-filters { background: var(--bg-primary); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 24px; height: fit-content; position: sticky; top: 88px; }
+.browse-filters h3 { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--text-primary); }
+.filter-group { margin-bottom: 20px; }
+.filter-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.filter-group input, .filter-group select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; }
+.filter-group input:focus, .filter-group select:focus { outline: none; border-color: var(--primary); }
+.filter-btn { width: 100%; margin-top: 8px; }
+
+.places-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-content: start; }
+
+.place-card { background: var(--bg-primary); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; transition: var(--transition); cursor: pointer; }
+.place-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--primary); }
+.place-card-img { height: 180px; background: linear-gradient(135deg, var(--bg-tertiary), var(--border)); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 14px; position: relative; }
+.place-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.place-card-badge { position: absolute; top: 12px; right: 12px; }
+.place-card-body { padding: 16px; }
+.place-card-body h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.place-card-location { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.place-card-details { display: flex; gap: 16px; margin-bottom: 12px; }
+.place-card-detail { font-size: 12px; color: var(--text-secondary); }
+.place-card-detail strong { color: var(--text-primary); }
+.place-card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); }
+.place-card-price { font-size: 18px; font-weight: 800; color: var(--primary); }
+.place-card-price span { font-size: 13px; font-weight: 400; color: var(--text-muted); }
+
+.reco-section { margin-bottom: 40px; }
+.reco-section h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+.empty-state { text-align: center; padding: 64px 24px; color: var(--text-secondary); }
+.empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text-primary); }
+
+.place-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.place-modal { background: var(--bg-primary); border-radius: var(--radius-xl); max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 32px; position: relative; }
+.place-modal-close { position: absolute; top: 16px; right: 16px; background: var(--bg-tertiary); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+.place-modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+.place-modal-info { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+.place-modal-info-item { }
+.place-modal-info-item label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+.place-modal-info-item p { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-top: 2px; }
+
+@media (max-width: 768px) {
+  .browse-layout { grid-template-columns: 1fr; }
+  .browse-filters { position: static; }
+  .places-grid { grid-template-columns: 1fr; }
+}

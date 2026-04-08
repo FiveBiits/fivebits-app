@@ -1,41 +1,9 @@
-.services-box {
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem 2rem;
-}
-
-.services-box h1 {
-  margin: 2px;
-}
-
-.services-box p {
-  line-height: 1.5rem;
-}
-
-.services-box .heading {
-  display: flex;
-  align-items: center;
-}
-
-.services-box .heading img {
-  height: 6vh;
-  margin-left: 1rem;
-}
-
-@media (max-width: 600px) {
-  .services-box {
-    padding: 1rem;
-  }
-
-  .services-box h1 {
-    font-size: 1.1rem;
-  }
-
-  .services-box p {
-    font-size: 0.9rem;
-  }
-
-  .services-box .heading img {
-    height: 4vh;
-  }
-}
+.services-page { padding: 48px 24px; max-width: 1000px; margin: 0 auto; }
+.services-page h1 { font-size: 32px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+.services-lead { text-align: center; color: var(--text-secondary); font-size: 16px; max-width: 600px; margin: 0 auto 48px; }
+.service-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+.service-item { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 32px; transition: var(--transition); }
+.service-item:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.service-icon { width: 56px; height: 56px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px; }
+.service-item h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.service-item p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }

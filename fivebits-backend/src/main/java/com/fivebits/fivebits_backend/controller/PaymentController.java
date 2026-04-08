@@ -1,7 +1,9 @@
 package com.fivebits.fivebits_backend.controller;
 
-import com.fivebits.fivebits_backend.model.Payment;
-import com.fivebits.fivebits_backend.repository.PaymentRepository;
+import com.fivebits.fivebits_backend.dto.PaymentRequest;
+import com.fivebits.fivebits_backend.dto.PaymentResponse;
+import com.fivebits.fivebits_backend.service.PaymentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,61 +11,32 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/payments")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class PaymentController {
 
-    private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
 
-    public PaymentController(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
-    }
-
-    // GET ALL PAYMENTS
-    @GetMapping
-    public List<Payment> getAllPayments() {
-        return paymentRepository.findAll();
-    }
-
-    // CREATE PAYMENT (State: Created)
     @PostMapping("/create")
-    public Payment createPayment(@RequestBody Payment payment) {
-        payment.setStatus("Created");
-        return paymentRepository.save(payment);
+    public ResponseEntity<?> createPayment(@RequestBody PaymentRequest request) {
+        try {
+            return ResponseEntity.ok(paymentService.createPayment(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // PROCESS PAYMENT
     @PatchMapping("/{id}/process")
-    public ResponseEntity<Payment> processPayment(@PathVariable String id) {
-        return paymentRepository.findById(id).map(payment -> {
-            payment.processPayment();
-            return ResponseEntity.ok(paymentRepository.save(payment));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<PaymentResponse> processPayment(@PathVariable Long id) {
+        return ResponseEntity.ok(paymentService.processPayment(id));
     }
 
-    // MARK AS SUCCESSFUL
-    @PatchMapping("/{id}/success")
-    public ResponseEntity<Payment> markSuccessful(@PathVariable String id) {
-        return paymentRepository.findById(id).map(payment -> {
-            payment.markSuccessful();
-            return ResponseEntity.ok(paymentRepository.save(payment));
-        }).orElse(ResponseEntity.notFound().build());
+    @GetMapping("/student/{studentId}")
+    public List<PaymentResponse> getStudentPayments(@PathVariable Long studentId) {
+        return paymentService.getStudentPayments(studentId);
     }
 
-    // MARK AS FAILED
-    @PatchMapping("/{id}/fail")
-    public ResponseEntity<Payment> markFailed(@PathVariable String id) {
-        return paymentRepository.findById(id).map(payment -> {
-            payment.markFailed();
-            return ResponseEntity.ok(paymentRepository.save(payment));
-        }).orElse(ResponseEntity.notFound().build());
-    }
-
-    // GENERATE RECEIPT
-    @PatchMapping("/{id}/receipt")
-    public ResponseEntity<Payment> generateReceipt(@PathVariable String id) {
-        return paymentRepository.findById(id).map(payment -> {
-            payment.generateReceipt();
-            return ResponseEntity.ok(paymentRepository.save(payment));
-        }).orElse(ResponseEntity.notFound().build());
+    @GetMapping("/owner/{ownerId}")
+    public List<PaymentResponse> getOwnerPayments(@PathVariable Long ownerId) {
+        return paymentService.getOwnerPayments(ownerId);
     }
 }

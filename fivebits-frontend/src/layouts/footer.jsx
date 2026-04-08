@@ -1,19 +1,37 @@
 import { Link } from 'react-router-dom';
 import './footer.css';
-import alien from '../assets/logo.png';
 
-function Footer() {
+export default function Footer() {
   return (
     <footer className="footer">
-        <div className="footer-logo left">
-        <Link to="/"><img src={alien} alt="FiveBits Logo" /></Link>
+      <div className="footer-inner">
+        <div className="footer-brand">
+          <h3>FiveBits</h3>
+          <p>An Online Boarding Place Discovery and Management System — helping students find the perfect boarding place near their university.</p>
+        </div>
+        <div className="footer-col">
+          <h4>Quick Links</h4>
+          <Link to="/">Home</Link>
+          <Link to="/browse">Browse Places</Link>
+          <Link to="/about">About Us</Link>
+          <Link to="/services">Services</Link>
+        </div>
+        <div className="footer-col">
+          <h4>For Users</h4>
+          <Link to="/signup">Create Account</Link>
+          <Link to="/signin">Sign In</Link>
+          <Link to="/contact">Contact Us</Link>
+        </div>
+        <div className="footer-col">
+          <h4>Contact</h4>
+          <a href="mailto:info@fivebits.lk">info@fivebits.lk</a>
+          <a href="tel:+94771234567">+94 77 123 4567</a>
+          <p style={{fontSize:'14px',color:'rgba(255,255,255,0.6)'}}>Moratuwa, Sri Lanka</p>
+        </div>
       </div>
-      <p>© 2026 FIVEBITS. ALL RIGHTS RESERVED.</p>
-      <div className="footer-logo right">
-        <Link to="/"><img src={alien} alt="FiveBits Logo" /></Link>
+      <div className="footer-bottom">
+        &copy; {new Date().getFullYear()} FiveBits. All rights reserved. Built by Team FiveBits.
       </div>
     </footer>
   );
 }
-
-export default Footer;

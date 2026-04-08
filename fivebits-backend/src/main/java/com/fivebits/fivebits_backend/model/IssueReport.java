@@ -1,42 +1,78 @@
 package com.fivebits.fivebits_backend.model;
 
-import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "issue_reports")
+@Data
+@NoArgsConstructor
 public class IssueReport {
 
     @Id
-    private String issueID;  
-    private String complaintText;  
-    private Date dateSubmitted; 
-    private String status;  
-    private String reply;  
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public IssueReport() {}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false)
+    private Student student;
 
-    public IssueReport(String issueID, String complaintText) {
-        this.issueID = issueID;
-        this.complaintText = complaintText;
-        this.dateSubmitted = new Date();
-        this.status = "Submitted";
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id", nullable = false)
+    private BoardingPlace place;
+
+    @Column(length = 2000, nullable = false)
+    private String description;
+
+    @Column(nullable = false)
+    private String status;
+
+    private String reply;
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime resolvedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        if (this.status == null) this.status = "SUBMITTED";
     }
 
-    // Methods  
-    public void updateComplaintStatus(String newStatus) {
-        this.status = newStatus;
-    }
-
+    // Domain methods matching the state diagram
     public void assignToOwner() {
-        this.status = "Assigned"; 
+        this.status = "ASSIGNED";
     }
 
-    // Getters and Setters 
-    public String getIssueID() { return issueID; }
-    public String getComplaintText() { return complaintText; }
-    public Date getDateSubmitted() { return dateSubmitted; }
-    public String getStatus() { return status; }
-    public String getReply() { return reply; }
-    public void setReply(String reply) { this.reply = reply; }
+    public void startProgress() {
+        this.status = "IN_PROGRESS";
+    }
+
+    public void resolve(String reply) {
+        this.status = "RESOLVED";
+        this.reply = reply;
+        this.resolvedAt = LocalDateTime.now();
+    }
+
+    public void close() {
+        this.status = "CLOSED";
+    }
+
+    public void reject(String reason) {
+        this.status = "REJECTED";
+        this.reply = reason;
+    }
 }

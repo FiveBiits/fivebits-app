@@ -1,15 +1,21 @@
 package com.fivebits.fivebits_backend.model;
 
+import java.time.LocalDate;
+
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
-import java.time.LocalDate;
 
 @Data
-@MappedSuperclass // This tells JPA this is a parent class, not a standalone table
+@MappedSuperclass
 public abstract class Bill {
+
     @Id
-    protected String billID;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    protected Long id;
+
     protected double amount;
     protected LocalDate dueDate;
     protected boolean isPaid;

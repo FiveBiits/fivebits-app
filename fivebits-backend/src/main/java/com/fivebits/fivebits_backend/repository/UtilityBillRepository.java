@@ -1,12 +1,16 @@
 package com.fivebits.fivebits_backend.repository;
 
-
-
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import com.fivebits.fivebits_backend.model.UtilityBill;
 
-@Repository
-public interface UtilityBillRepository extends JpaRepository<UtilityBill, String> {
+import java.util.List;
+
+public interface UtilityBillRepository extends JpaRepository<UtilityBill, Long> {
+
+    List<UtilityBill> findByStudentId(Long studentId);
+
+    List<UtilityBill> findByPlaceId(Long placeId);
+
+    List<UtilityBill> findByPlaceOwnerId(Long ownerId);
 }

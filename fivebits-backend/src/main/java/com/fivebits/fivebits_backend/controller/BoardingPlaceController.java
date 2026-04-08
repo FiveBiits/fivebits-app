@@ -1,7 +1,9 @@
 package com.fivebits.fivebits_backend.controller;
 
-import com.fivebits.fivebits_backend.model.BoardingPlace;
-import com.fivebits.fivebits_backend.repository.BoardingPlaceRepository;
+import com.fivebits.fivebits_backend.dto.BoardingPlaceRequest;
+import com.fivebits.fivebits_backend.dto.BoardingPlaceResponse;
+import com.fivebits.fivebits_backend.service.BoardingPlaceService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,62 +11,72 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/places")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class BoardingPlaceController {
 
-    private final BoardingPlaceRepository placeRepository;
+    private final BoardingPlaceService placeService;
 
-    public BoardingPlaceController(BoardingPlaceRepository placeRepository) {
-        this.placeRepository = placeRepository;
-    }
-
-    // GET ALL PLACES
     @GetMapping
-    public List<BoardingPlace> getAllPlaces() {
-        return placeRepository.findAll();
+    public List<BoardingPlaceResponse> getAllPlaces() {
+        return placeService.getAllPlaces();
     }
 
-    // ADD NEW PLACE
+    @GetMapping("/{id}")
+    public ResponseEntity<BoardingPlaceResponse> getPlace(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(placeService.getPlace(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping("/add")
-    public BoardingPlace addPlace(@RequestBody BoardingPlace place) {
-        return placeRepository.save(place);
+    public ResponseEntity<?> addPlace(@RequestParam Long ownerId, @RequestBody BoardingPlaceRequest request) {
+        try {
+            return ResponseEntity.ok(placeService.createPlace(ownerId, request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // UPDATE PLACE
     @PatchMapping("/{id}/update")
-    public ResponseEntity<BoardingPlace> updatePlace(
-            @PathVariable String id,
-            @RequestBody BoardingPlace updatedPlace) {
-
-        return placeRepository.findById(id).map(place -> {
-            place.updateDetails(
-                    updatedPlace.getName(),
-                    updatedPlace.getLocation(),
-                    updatedPlace.getPrice(),
-                    updatedPlace.getAvailableRooms()
-            );
-            return ResponseEntity.ok(placeRepository.save(place));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> updatePlace(@PathVariable Long id, @RequestBody BoardingPlaceRequest request) {
+        try {
+            return ResponseEntity.ok(placeService.updatePlace(id, request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // DELETE PLACE
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePlace(@PathVariable String id) {
-        return placeRepository.findById(id).map(place -> {
-            placeRepository.delete(place);
-            return ResponseEntity.ok().build();
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> deletePlace(@PathVariable Long id) {
+        placeService.deletePlace(id);
+        return ResponseEntity.ok().build();
     }
 
-    // SEARCH BY LOCATION
-    @GetMapping("/search/location")
-    public List<BoardingPlace> searchByLocation(@RequestParam String location) {
-        return placeRepository.findByLocation(location);
+    @GetMapping("/owner/{ownerId}")
+    public List<BoardingPlaceResponse> getOwnerPlaces(@PathVariable Long ownerId) {
+        return placeService.getOwnerPlaces(ownerId);
     }
 
-    // SEARCH BY PRICE
-    @GetMapping("/search/price")
-    public List<BoardingPlace> searchByPrice(@RequestParam double maxPrice) {
-        return placeRepository.findByPriceLessThanEqual(maxPrice);
+    @GetMapping("/search")
+    public List<BoardingPlaceResponse> searchPlaces(
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) Double maxPrice) {
+        return placeService.searchPlaces(location, maxPrice);
+    }
+
+    @GetMapping("/recommendations")
+    public List<BoardingPlaceResponse> getRecommendations(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(defaultValue = "5") int limit) {
+        return placeService.getRecommendations(lat, lng, maxPrice, limit);
+    }
+
+    @PatchMapping("/{id}/verify")
+    public ResponseEntity<BoardingPlaceResponse> verifyPlace(@PathVariable Long id) {
+        return ResponseEntity.ok(placeService.verifyPlace(id));
     }
 }

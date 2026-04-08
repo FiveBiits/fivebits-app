@@ -1,43 +1,46 @@
+import { useState } from 'react';
 import '../styles/contact.css';
 
-import Comments from '../components/comments';
+export default function Contact() {
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [sent, setSent] = useState(false);
 
-import whatsapp from '../assets/whatsapp.png';
-import youtube from '../assets/youtube.png';
-import facebook from '../assets/facebook.png';  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSent(true);
+    setForm({ name: '', email: '', message: '' });
+    setTimeout(() => setSent(false), 4000);
+  };
 
-function Contact() {
   return (
-    <div className="contact">
+    <main className="contact-page">
+      <h1>Contact Us</h1>
+      <p className="contact-lead">Have questions or feedback? We'd love to hear from you.</p>
 
-      <div className="contact-box">
-        <div className="heading">
-          <h1>+ WHATSAPP</h1>
-          <img src={whatsapp} alt="WhatsApp" />
-        </div>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequuntur iste molestias eos omnis fuga nostrum autem, et sit pariatur labore cumque voluptatibus soluta ab at numquam excepturi, iure aspernatur explicabo consectetur vero nisi temporibus. Commodi magni quaerat explicabo officia voluptatibus sunt pariatur sapiente cumque illum, nemo minima perferendis sit similique asperiores quae, provident alias, libero delectus veniam repudiandae id officiis eligendi iure? Voluptatibus, fuga harum? Voluptatem hic fugiat deserunt, odio sapiente eum ab autem molestiae?</p>
+      <div className="contact-form">
+        {sent && <div className="auth-error" style={{ background: '#d1fae5', color: '#065f46' }}>Message sent! We'll get back to you soon.</div>}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="form-group">
+            <label>Your Name</label>
+            <input type="text" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Email Address</label>
+            <input type="email" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Message</label>
+            <textarea required value={form.message} onChange={e => setForm({...form, message: e.target.value})} />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>Send Message</button>
+        </form>
       </div>
 
-      <div className="contact-box">
-        <div className="heading">
-          <h1>+ YOUTUBE</h1>
-          <img src={youtube} alt="YouTube" />
-        </div>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptate repellendus dicta culpa delectus quod quis quos! Reprehenderit voluptates quos ipsum at, aperiam minus nobis assumenda voluptatem commodi placeat tenetur esse, omnis obcaecati labore dicta necessitatibus praesentium possimus perspiciatis error nisi itaque dolores eligendi maiores nesciunt! Dolorem expedita aspernatur ex voluptatem.</p>
+      <div className="contact-info">
+        <div className="contact-info-item"><h4>Email</h4><p>support@fivebits.lk</p></div>
+        <div className="contact-info-item"><h4>Phone</h4><p>+94 11 234 5678</p></div>
+        <div className="contact-info-item"><h4>Location</h4><p>Moratuwa, Sri Lanka</p></div>
       </div>
-
-      <div className="contact-box">
-        <div className="heading">
-          <h1>+ FACEBOOK</h1>
-          <img src={facebook} alt="Facebook" />
-        </div>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum obcaecati, explicabo quam eius deserunt laborum, distinctio repellat quidem dolorum expedita quia magnam error quo repudiandae voluptate nam totam accusamus ducimus asperiores cum, voluptates laboriosam id architecto tempora. Provident deleniti magnam esse sint eos ducimus tenetur unde dignissimos illo officia nam quibusdam, ullam perspiciatis illum minus, incidunt excepturi. Provident harum officiis sapiente numquam nobis velit quo qui alias iusto dolorum ipsam, quibusdam accusamus illum aperiam</p>
-      </div>
-
-      <Comments />
-
-    </div>
+    </main>
   );
 }
-
-export default Contact;
