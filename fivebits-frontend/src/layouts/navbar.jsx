@@ -2,7 +2,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 import { HiOutlineHome, HiOutlineInformationCircle, HiOutlinePhone, HiOutlineCog, HiOutlineSearch } from 'react-icons/hi';
-import { HiOutlineArrowRightOnRectangle, HiOutlineChevronDown, HiOutlineUser, HiBars3 } from 'react-icons/hi2';
+import { HiOutlineArrowRightOnRectangle, HiOutlineUser, HiBars3 } from 'react-icons/hi2';
+import logo from '../assets/logo.png';
 import './navbar.css';
 
 export default function NavBar() {
@@ -34,7 +35,7 @@ export default function NavBar() {
     <nav className="navbar">
       <div className="navbar-inner">
         <Link to="/" className="navbar-logo">
-          <span>FiveBits</span>
+          <img src={logo} alt="FiveBits" className="navbar-logo-img" />
         </Link>
 
         <button className="navbar-mobile-btn" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -52,16 +53,16 @@ export default function NavBar() {
         <div className="navbar-actions">
           {user ? (
             <div className="navbar-user" ref={dropdownRef}>
-              <button className="navbar-user-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
-                <div className="navbar-avatar">{user.name?.charAt(0).toUpperCase()}</div>
-                <div className="navbar-user-info">
-                  <div className="navbar-user-name">{user.name}</div>
-                  <div className="navbar-user-role">{user.userType?.toLowerCase()}</div>
-                </div>
-                <HiOutlineChevronDown size={14} />
+              <button className="navbar-profile-icon" onClick={() => setDropdownOpen(!dropdownOpen)} title={user.name}>
+                <HiOutlineUser size={20} />
               </button>
               {dropdownOpen && (
                 <div className="navbar-dropdown">
+                  <div className="navbar-dropdown-header">
+                    <span className="navbar-dropdown-name">{user.name}</span>
+                    <span className="navbar-dropdown-role">{user.userType?.toLowerCase()}</span>
+                  </div>
+                  <div className="navbar-dropdown-divider" />
                   <Link to={dashboardPath} onClick={() => setDropdownOpen(false)}>
                     <HiOutlineUser size={16} /> Dashboard
                   </Link>

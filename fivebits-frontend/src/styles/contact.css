@@ -3,7 +3,7 @@
 .contact-lead { text-align: center; color: var(--text-secondary); margin-bottom: 32px; }
 .contact-form { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 32px; display: flex; flex-direction: column; gap: 16px; }
 .contact-form textarea { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: inherit; resize: vertical; min-height: 120px; }
-.contact-form textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,58,95,0.1); }
+.contact-form textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,26,26,0.1); }
 .contact-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 32px; }
 .contact-info-item { text-align: center; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); }
 .contact-info-item h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }

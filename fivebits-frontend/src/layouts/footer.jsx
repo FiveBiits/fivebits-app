@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import logo from '../assets/logo.png';
 import './footer.css';
 
 export default function Footer() {
@@ -6,7 +7,9 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <h3>FiveBits</h3>
+          <div className="footer-brand-header">
+            <img src={logo} alt="FiveBits" className="footer-logo" />
+          </div>
           <p>An Online Boarding Place Discovery and Management System — helping students find the perfect boarding place near their university.</p>
         </div>
         <div className="footer-col">
@@ -30,7 +33,9 @@ export default function Footer() {
         </div>
       </div>
       <div className="footer-bottom">
-        &copy; {new Date().getFullYear()} FiveBits. All rights reserved. Built by Team FiveBits.
+        <img src={logo} alt="" className="footer-bottom-icon" />
+        <span>&copy; {new Date().getFullYear()} FiveBits. All rights reserved. Built by Team FiveBits.</span>
+        <img src={logo} alt="" className="footer-bottom-icon" />
       </div>
     </footer>
   );
