@@ -1,5 +1,8 @@
 package com.fivebits.fivebits_backend.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,10 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fivebits.fivebits_backend.dto.BoardingPlaceRequest;
 import com.fivebits.fivebits_backend.dto.BoardingPlaceResponse;
+import com.fivebits.fivebits_backend.dto.ImageResponse;
 import com.fivebits.fivebits_backend.model.BoardingOwner;
 import com.fivebits.fivebits_backend.model.BoardingPlace;
+import com.fivebits.fivebits_backend.model.BoardingPlaceImage;
 import com.fivebits.fivebits_backend.model.University;
 import com.fivebits.fivebits_backend.repository.BoardingOwnerRepository;
+import com.fivebits.fivebits_backend.repository.BoardingPlaceImageRepository;
 import com.fivebits.fivebits_backend.repository.BoardingPlaceRepository;
 import com.fivebits.fivebits_backend.repository.UniversityRepository;
 
@@ -24,6 +30,8 @@ public class BoardingPlaceService {
     private final BoardingPlaceRepository placeRepository;
     private final BoardingOwnerRepository ownerRepository;
     private final UniversityRepository universityRepository;
+    private final BoardingPlaceImageRepository imageRepository;
+    private final ImageStorageService storageService;
 
     @Transactional
     public BoardingPlaceResponse createPlace(Long ownerId, BoardingPlaceRequest request) {
@@ -155,6 +163,11 @@ public class BoardingPlaceService {
 
     @Transactional
     public void deletePlace(Long placeId) {
+        // Delete image files from disk
+        List<BoardingPlaceImage> images = imageRepository.findByPlaceIdOrderByDisplayOrder(placeId);
+        for (BoardingPlaceImage img : images) {
+            try { storageService.delete(img.getFilename()); } catch (IOException ignored) {}
+        }
         placeRepository.deleteById(placeId);
     }
 
@@ -180,7 +193,6 @@ public class BoardingPlaceService {
         resp.setLatitude(place.getLatitude());
         resp.setLongitude(place.getLongitude());
         resp.setRating(place.getRating());
-        resp.setImageUrl(place.getImageUrl());
         resp.setVerified(place.isVerified());
         resp.setOwnerId(place.getOwner().getId());
         resp.setOwnerName(place.getOwner().getName());
@@ -188,6 +200,26 @@ public class BoardingPlaceService {
         resp.setCreatedAt(place.getCreatedAt());
         resp.setDistance(distance);
         resp.setRankScore(rankScore);
+
+        // Populate images
+        List<BoardingPlaceImage> images = imageRepository.findByPlaceIdOrderByDisplayOrder(place.getId());
+        if (!images.isEmpty()) {
+            resp.setImages(images.stream()
+                    .sorted(Comparator.comparingInt(BoardingPlaceImage::getDisplayOrder))
+                    .map(img -> new ImageResponse(img.getId(), "/api/images/" + img.getFilename(), img.isMain(), img.getDisplayOrder()))
+                    .collect(Collectors.toList()));
+            BoardingPlaceImage mainImg = images.stream()
+                    .filter(BoardingPlaceImage::isMain)
+                    .findFirst()
+                    .orElse(images.get(0));
+            resp.setImageUrl("/api/images/" + mainImg.getFilename());
+        } else if (place.getImageUrl() != null && !place.getImageUrl().isEmpty()) {
+            // Backward compatibility: old URL-based images
+            resp.setImageUrl(place.getImageUrl());
+            resp.setImages(new ArrayList<>());
+        } else {
+            resp.setImages(new ArrayList<>());
+        }
 
         // Calculate nearest university
         if (place.getLatitude() != 0 && place.getLongitude() != 0) {

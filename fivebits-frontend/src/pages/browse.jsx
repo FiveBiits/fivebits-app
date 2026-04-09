@@ -71,6 +71,13 @@ export default function Browse() {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingMsg, setBookingMsg] = useState('');
+  const [modalImageIndex, setModalImageIndex] = useState(0);
+
+  const selectPlace = (place) => {
+    setSelectedPlace(place);
+    const mainIdx = place.images?.findIndex(img => img.main) ?? 0;
+    setModalImageIndex(mainIdx >= 0 ? mainIdx : 0);
+  };
 
   const hasAnyFilter = (f) => !!(f.location || f.maxPrice || f.universityId || f.maxDistance || f.minRooms);
 
@@ -252,7 +259,7 @@ export default function Browse() {
                     </span>
                   </div>
                   <div className="places-grid">
-                    {top5.map(p => <PlaceCard key={`reco-${p.id}`} place={p} isReco selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
+                    {top5.map(p => <PlaceCard key={`reco-${p.id}`} place={p} isReco selectedUni={selectedUni} onSelect={selectPlace} onBook={handleBook} />)}
                   </div>
                 </div>
 
@@ -264,7 +271,7 @@ export default function Browse() {
                       <span className="results-count">{otherPlaces.length} more</span>
                     </div>
                     <div className="places-grid">
-                      {otherPlaces.map(p => <PlaceCard key={p.id} place={p} selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
+                      {otherPlaces.map(p => <PlaceCard key={p.id} place={p} selectedUni={selectedUni} onSelect={selectPlace} onBook={handleBook} />)}
                     </div>
                   </>
                 )}
@@ -285,7 +292,7 @@ export default function Browse() {
                   <span className="results-count">{places.length} listings</span>
                 </div>
                 <div className="places-grid">
-                  {places.map(p => <PlaceCard key={p.id} place={p} selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
+                  {places.map(p => <PlaceCard key={p.id} place={p} selectedUni={selectedUni} onSelect={selectPlace} onBook={handleBook} />)}
                 </div>
               </>
             )
@@ -297,6 +304,29 @@ export default function Browse() {
         <div className="place-modal-overlay" onClick={() => setSelectedPlace(null)}>
           <div className="place-modal" onClick={e => e.stopPropagation()}>
             <button className="place-modal-close" onClick={() => setSelectedPlace(null)}><HiXMark size={18} /></button>
+
+            {selectedPlace.images && selectedPlace.images.length > 0 ? (
+              <div className="place-modal-gallery">
+                <div className="gallery-main">
+                  <img src={selectedPlace.images[modalImageIndex]?.url} alt={selectedPlace.name} />
+                </div>
+                {selectedPlace.images.length > 1 && (
+                  <div className="gallery-thumbs">
+                    {selectedPlace.images.map((img, i) => (
+                      <button key={img.id} className={`gallery-thumb ${i === modalImageIndex ? 'active' : ''}`} onClick={() => setModalImageIndex(i)}>
+                        <img src={img.url} alt={`${selectedPlace.name} ${i + 1}`} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : selectedPlace.imageUrl ? (
+              <div className="place-modal-gallery">
+                <div className="gallery-main">
+                  <img src={selectedPlace.imageUrl} alt={selectedPlace.name} />
+                </div>
+              </div>
+            ) : null}
 
             <div className="place-modal-header">
               <h2>{selectedPlace.name}</h2>

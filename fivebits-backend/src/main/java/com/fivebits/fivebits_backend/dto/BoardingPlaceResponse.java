@@ -1,6 +1,7 @@
 package com.fivebits.fivebits_backend.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class BoardingPlaceResponse {
     private double longitude;
     private double rating;
     private String imageUrl;
+    private List<ImageResponse> images;
     private boolean verified;
     private Long ownerId;
     private String ownerName;

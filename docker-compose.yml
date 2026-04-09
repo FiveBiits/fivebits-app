@@ -36,6 +36,8 @@ services:
       JWT_EXPIRATION: 86400000
     ports:
       - "8080:8080"
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,6 +61,7 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
 
 networks:
   fivebits-network:

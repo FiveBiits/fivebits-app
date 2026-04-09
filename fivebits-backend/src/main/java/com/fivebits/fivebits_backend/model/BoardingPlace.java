@@ -62,6 +62,9 @@ public class BoardingPlace {
     private BoardingOwner owner;
 
     @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BoardingPlaceImage> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings = new ArrayList<>();
 
     @Column(updatable = false)

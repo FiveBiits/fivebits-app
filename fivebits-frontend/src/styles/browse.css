@@ -425,6 +425,16 @@
 
 .place-modal-close:hover { background: var(--border); }
 
+/* ── Image Gallery ── */
+.place-modal-gallery { margin-bottom: 16px; }
+.gallery-main { width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-secondary); }
+.gallery-main img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-thumbs { display: flex; gap: 8px; margin-top: 8px; overflow-x: auto; padding-bottom: 4px; }
+.gallery-thumb { width: 56px; height: 56px; border-radius: var(--radius); overflow: hidden; border: 2px solid var(--border); cursor: pointer; padding: 0; background: none; flex-shrink: 0; transition: var(--transition); }
+.gallery-thumb.active { border-color: var(--primary); }
+.gallery-thumb:hover { border-color: var(--primary); }
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 .place-modal-header { margin-bottom: 16px; }
 .place-modal-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
 .place-modal-header p { color: var(--text-secondary); font-size: 14px; display: flex; align-items: center; gap: 4px; }

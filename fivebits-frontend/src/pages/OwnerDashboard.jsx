@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getOwnerStats } from '../services/dashboardService';
-import { getOwnerPlaces, createPlace, deletePlace } from '../services/placeService';
+import { getOwnerPlaces, createPlace, deletePlace, uploadPlaceImages } from '../services/placeService';
 import { getOwnerBookings, confirmBooking, cancelBooking } from '../services/bookingService';
 import { getOwnerPayments } from '../services/paymentService';
 import { getOwnerIssues, resolveIssue } from '../services/issueService';
-import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus, HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineWrenchScrewdriver } from 'react-icons/hi2';
+import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus, HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineWrenchScrewdriver, HiOutlinePhoto, HiOutlineStar } from 'react-icons/hi2';
 import MapPicker from '../components/MapPicker';
 import '../styles/dashboard.css';
 
@@ -18,7 +18,9 @@ export default function OwnerDashboard() {
   const [payments, setPayments] = useState([]);
   const [issues, setIssues] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [placeForm, setPlaceForm] = useState({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', imageUrl:'', latitude: 0, longitude: 0 });
+  const [placeForm, setPlaceForm] = useState({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', latitude: 0, longitude: 0 });
+  const [imageFiles, setImageFiles] = useState([]);
+  const [mainImageIndex, setMainImageIndex] = useState(0);
   const [resolveReply, setResolveReply] = useState({});
   const [msg, setMsg] = useState('');
 
@@ -38,10 +40,16 @@ export default function OwnerDashboard() {
   const handleAddPlace = async (e) => {
     e.preventDefault();
     try {
-      await createPlace(user.id, { ...placeForm, price: parseFloat(placeForm.price), totalRooms: parseInt(placeForm.totalRooms), availableRooms: parseInt(placeForm.availableRooms) });
+      const res = await createPlace(user.id, { ...placeForm, price: parseFloat(placeForm.price), totalRooms: parseInt(placeForm.totalRooms), availableRooms: parseInt(placeForm.availableRooms) });
+      // Upload images if any
+      if (imageFiles.length > 0) {
+        await uploadPlaceImages(res.data.id, imageFiles, mainImageIndex);
+      }
       flash('Boarding place added successfully');
       setShowAddForm(false);
-      setPlaceForm({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', imageUrl:'', latitude: 0, longitude: 0 });
+      setPlaceForm({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', latitude: 0, longitude: 0 });
+      setImageFiles([]);
+      setMainImageIndex(0);
       load();
     } catch (err) { flash(err.response?.data || 'Failed to add place'); }
   };
@@ -68,6 +76,26 @@ export default function OwnerDashboard() {
   };
 
   const pf = (f) => (e) => setPlaceForm({...placeForm, [f]: e.target.value});
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 6 * 1024 * 1024; // 6MB
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    const valid = files.filter(f => f.size <= maxSize && allowed.includes(f.type));
+    const remaining = 6 - imageFiles.length;
+    const toAdd = valid.slice(0, remaining);
+    if (toAdd.length < files.length) {
+      flash('Some files were skipped (max 6MB, JPG/PNG/WebP only, max 6 total)');
+    }
+    setImageFiles(prev => [...prev, ...toAdd]);
+    e.target.value = '';
+  };
+
+  const removeImage = (index) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    if (mainImageIndex === index) setMainImageIndex(0);
+    else if (mainImageIndex > index) setMainImageIndex(prev => prev - 1);
+  };
 
   return (
     <main className="dashboard">
@@ -133,7 +161,33 @@ export default function OwnerDashboard() {
               <div className="form-group"><label>Available Rooms</label><input type="number" required value={placeForm.availableRooms} onChange={pf('availableRooms')} /></div>
               <div className="form-group"><label>Facilities (comma separated)</label><input value={placeForm.facilities} onChange={pf('facilities')} placeholder="WiFi, AC, Kitchen" /></div>
               <div className="form-group full"><label>Description</label><input value={placeForm.description} onChange={pf('description')} /></div>
-              <div className="form-group full"><label>Image URL</label><input value={placeForm.imageUrl} onChange={pf('imageUrl')} /></div>
+              <div className="form-group full">
+                <label>Photos ({imageFiles.length}/6)</label>
+                <div className="image-upload-area">
+                  {imageFiles.length < 6 && (
+                    <label className="image-upload-trigger">
+                      <HiOutlinePhoto size={24} />
+                      <span>Click to upload</span>
+                      <span className="image-upload-hint">JPG, PNG, WebP — max 6 MB each</span>
+                      <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageSelect} style={{display:'none'}} />
+                    </label>
+                  )}
+                  {imageFiles.length > 0 && (
+                    <div className="image-preview-grid">
+                      {imageFiles.map((file, i) => (
+                        <div className={`image-preview-item ${i === mainImageIndex ? 'is-main' : ''}`} key={i}>
+                          <img src={URL.createObjectURL(file)} alt={file.name} />
+                          <div className="image-preview-actions">
+                            <button type="button" className={`image-star ${i === mainImageIndex ? 'active' : ''}`} onClick={() => setMainImageIndex(i)} title="Set as main image"><HiOutlineStar size={14} /></button>
+                            <button type="button" className="image-remove" onClick={() => removeImage(i)} title="Remove"><HiOutlineXMark size={14} /></button>
+                          </div>
+                          {i === mainImageIndex && <span className="image-main-badge">Main</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
               <MapPicker
                 latitude={placeForm.latitude}
                 longitude={placeForm.longitude}

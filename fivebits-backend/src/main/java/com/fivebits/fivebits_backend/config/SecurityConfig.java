@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/places", "/api/places/search", "/api/places/recommendations", "/api/places/{id}").permitAll()
                 .requestMatchers("/api/universities/**").permitAll()
+                .requestMatchers("/api/images/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

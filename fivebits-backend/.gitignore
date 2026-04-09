@@ -1,5 +1,9 @@
 HELP.md
 target/
+
+### Uploaded Images ###
+uploads/place-images/*
+!uploads/place-images/.gitkeep
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
