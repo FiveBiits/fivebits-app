@@ -9,3 +9,20 @@
 .team-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px; font-weight: 700; color: var(--primary); }
 .team-card h4 { font-size: 14px; font-weight: 600; }
 .team-card p { font-size: 12px; color: var(--text-secondary); }
+
+@media (max-width: 600px) {
+  .about-page { padding: 32px 16px; }
+  .about-page h1 { font-size: 24px; }
+  .about-lead { font-size: 14px; margin-bottom: 32px; }
+  .about-section h2 { font-size: 18px; }
+  .about-section p { font-size: 14px; }
+  .team-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .team-card { padding: 16px; }
+  .team-avatar { width: 52px; height: 52px; font-size: 20px; }
+}
+
+@media (max-width: 400px) {
+  .about-page { padding: 24px 12px; }
+  .about-page h1 { font-size: 20px; }
+  .about-lead { font-size: 13px; }
+}

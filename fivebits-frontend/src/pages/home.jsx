@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { HiOutlineSearch, HiOutlineCurrencyDollar, HiOutlineDocumentText, HiOutlineLocationMarker, HiOutlineStar, HiOutlineShieldCheck, HiArrowRight } from 'react-icons/hi';
+import { HiOutlineUserPlus, HiOutlineRocketLaunch } from 'react-icons/hi2';
 import '../styles/home.css';
 
 function useReveal() {
@@ -43,10 +44,10 @@ export default function Home() {
           </p>
           <div className="hero-btns">
             <Link to="/browse" className="btn btn-white btn-lg">
-              Browse Places <HiArrowRight />
+              <HiOutlineSearch /> <span className="btn-label">Browse Places</span>
             </Link>
             <Link to="/signup" className="btn btn-ghost btn-lg">
-              Get Started
+              <HiOutlineRocketLaunch /> <span className="btn-label">Get Started</span>
             </Link>
           </div>
         </div>
@@ -137,7 +138,7 @@ export default function Home() {
             <h2>Ready to Find Your<br />Boarding Place?</h2>
             <p>Join hundreds of students who found their ideal accommodation through FiveBits</p>
             <Link to="/signup" className="btn btn-white btn-lg">
-              Create Free Account <HiArrowRight />
+              <HiOutlineUserPlus /> <span className="btn-label">Create Free Account</span>
             </Link>
           </div>
         </Reveal>

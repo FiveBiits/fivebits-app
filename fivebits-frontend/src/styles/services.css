@@ -7,3 +7,20 @@
 .service-icon { width: 56px; height: 56px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px; }
 .service-item h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .service-item p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+
+@media (max-width: 600px) {
+  .services-page { padding: 32px 16px; }
+  .services-page h1 { font-size: 24px; }
+  .services-lead { font-size: 14px; margin-bottom: 32px; }
+  .service-grid { gap: 16px; }
+  .service-item { padding: 24px; }
+  .service-icon { width: 48px; height: 48px; font-size: 20px; margin-bottom: 16px; }
+  .service-item h3 { font-size: 16px; }
+  .service-item p { font-size: 13px; }
+}
+
+@media (max-width: 400px) {
+  .services-page { padding: 24px 12px; }
+  .services-page h1 { font-size: 20px; }
+  .service-item { padding: 20px; }
+}

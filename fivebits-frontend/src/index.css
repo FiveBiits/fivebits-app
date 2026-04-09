@@ -76,6 +76,13 @@ input, select, textarea { font-family: inherit; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 .btn-lg { padding: 14px 28px; font-size: 16px; }
 
+/* ── Responsive: icon-only buttons on small screens ── */
+@media (max-width: 768px) {
+  .btn .btn-label { display: none; }
+  .btn { gap: 0; }
+  .btn svg { flex-shrink: 0; }
+}
+
 .card {
   background: var(--bg-primary);
   border-radius: var(--radius-lg);

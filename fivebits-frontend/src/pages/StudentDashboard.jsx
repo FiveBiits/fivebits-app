@@ -4,7 +4,7 @@ import { getStudentStats } from '../services/dashboardService';
 import { getStudentBookings, cancelBooking } from '../services/bookingService';
 import { getStudentPayments } from '../services/paymentService';
 import { getStudentIssues, submitIssue } from '../services/issueService';
-import { HiOutlineHome, HiOutlineCurrencyDollar, HiOutlineExclamationCircle, HiOutlineClipboardDocumentList } from 'react-icons/hi2';
+import { HiOutlineHome, HiOutlineCurrencyDollar, HiOutlineExclamationCircle, HiOutlineClipboardDocumentList, HiOutlineXMark, HiOutlinePaperAirplane } from 'react-icons/hi2';
 import '../styles/dashboard.css';
 
 export default function StudentDashboard() {
@@ -107,7 +107,7 @@ export default function StudentDashboard() {
                     <td>{b.startDate}</td>
                     <td>{b.endDate || '—'}</td>
                     <td>{statusBadge(b.status)}</td>
-                    <td>{(b.status === 'REQUESTED' || b.status === 'CONFIRMED') && <button className="btn btn-danger btn-sm" onClick={() => handleCancelBooking(b.id)}>Cancel</button>}</td>
+                    <td>{(b.status === 'REQUESTED' || b.status === 'CONFIRMED') && <button className="btn btn-danger btn-sm" onClick={() => handleCancelBooking(b.id)}><HiOutlineXMark /> <span className="btn-label">Cancel</span></button>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -164,7 +164,7 @@ export default function StudentDashboard() {
               ))}
             </select>
             <input className="form-group" style={{padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: 1}} placeholder="Describe the issue..." required value={issueForm.description} onChange={e => setIssueForm({...issueForm, description: e.target.value})} />
-            <button type="submit" className="btn btn-primary">Submit Issue</button>
+            <button type="submit" className="btn btn-primary"><HiOutlinePaperAirplane /> <span className="btn-label">Submit Issue</span></button>
           </form>
           {issues.length === 0 ? (
             <div className="dash-empty"><h3>No issues reported</h3><p>Report maintenance issues here and track their progress</p></div>

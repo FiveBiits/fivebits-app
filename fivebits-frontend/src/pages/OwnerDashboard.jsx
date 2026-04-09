@@ -5,7 +5,7 @@ import { getOwnerPlaces, createPlace, deletePlace } from '../services/placeServi
 import { getOwnerBookings, confirmBooking, cancelBooking } from '../services/bookingService';
 import { getOwnerPayments } from '../services/paymentService';
 import { getOwnerIssues, resolveIssue } from '../services/issueService';
-import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus } from 'react-icons/hi2';
+import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus, HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineWrenchScrewdriver } from 'react-icons/hi2';
 import MapPicker from '../components/MapPicker';
 import '../styles/dashboard.css';
 
@@ -107,7 +107,7 @@ export default function OwnerDashboard() {
                     <td>{b.placeName}</td>
                     <td>{b.startDate}</td>
                     <td>{statusBadge(b.status)}</td>
-                    <td>{b.status === 'REQUESTED' && <><button className="btn btn-success btn-sm" onClick={() => handleConfirm(b.id)}>Confirm</button>{' '}<button className="btn btn-danger btn-sm" onClick={() => handleCancel(b.id)}>Decline</button></>}</td>
+                    <td>{b.status === 'REQUESTED' && <><button className="btn btn-success btn-sm" onClick={() => handleConfirm(b.id)}><HiOutlineCheck /> <span className="btn-label">Confirm</span></button>{' '}<button className="btn btn-danger btn-sm" onClick={() => handleCancel(b.id)}><HiOutlineXMark /> <span className="btn-label">Decline</span></button></>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -120,7 +120,7 @@ export default function OwnerDashboard() {
         <div className="dash-section">
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
             <h2 style={{margin: 0}}>My Boarding Places</h2>
-            <button className="btn btn-primary btn-sm" onClick={() => setShowAddForm(!showAddForm)}><HiPlus /> {showAddForm ? 'Cancel' : 'Add New'}</button>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAddForm(!showAddForm)}><HiPlus /> <span className="btn-label">{showAddForm ? 'Cancel' : 'Add New'}</span></button>
           </div>
 
           {showAddForm && (
@@ -139,7 +139,7 @@ export default function OwnerDashboard() {
                 longitude={placeForm.longitude}
                 onChange={({latitude, longitude}) => setPlaceForm({...placeForm, latitude, longitude})}
               />
-              <button type="submit" className="btn btn-primary" style={{gridColumn:'1/-1'}}>Add Boarding Place</button>
+              <button type="submit" className="btn btn-primary" style={{gridColumn:'1/-1'}}><HiPlus /> <span className="btn-label">Add Boarding Place</span></button>
             </form>
           )}
 
@@ -153,7 +153,7 @@ export default function OwnerDashboard() {
                   <p>{l.location} — LKR {l.price?.toLocaleString()}/mo — {l.availableRooms}/{l.totalRooms} rooms available</p>
                 </div>
                 <div className="listing-actions">
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDeletePlace(l.id)}>Delete</button>
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDeletePlace(l.id)}><HiOutlineTrash /> <span className="btn-label">Delete</span></button>
                 </div>
               </div>
             ))
@@ -177,7 +177,7 @@ export default function OwnerDashboard() {
                     <td>{b.startDate}</td>
                     <td>{b.endDate || '—'}</td>
                     <td>{statusBadge(b.status)}</td>
-                    <td>{b.status === 'REQUESTED' && <><button className="btn btn-success btn-sm" onClick={() => handleConfirm(b.id)}>Confirm</button>{' '}<button className="btn btn-danger btn-sm" onClick={() => handleCancel(b.id)}>Decline</button></>}</td>
+                    <td>{b.status === 'REQUESTED' && <><button className="btn btn-success btn-sm" onClick={() => handleConfirm(b.id)}><HiOutlineCheck /> <span className="btn-label">Confirm</span></button>{' '}<button className="btn btn-danger btn-sm" onClick={() => handleCancel(b.id)}><HiOutlineXMark /> <span className="btn-label">Decline</span></button></>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -230,7 +230,7 @@ export default function OwnerDashboard() {
                       {(i.status === 'SUBMITTED' || i.status === 'ASSIGNED' || i.status === 'IN_PROGRESS') && (
                         <div style={{display: 'flex', gap: 6}}>
                           <input style={{padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: 12, width: 120}} placeholder="Reply..." value={resolveReply[i.id] || ''} onChange={e => setResolveReply({...resolveReply, [i.id]: e.target.value})} />
-                          <button className="btn btn-success btn-sm" onClick={() => handleResolve(i.id)}>Resolve</button>
+                          <button className="btn btn-success btn-sm" onClick={() => handleResolve(i.id)}><HiOutlineWrenchScrewdriver /> <span className="btn-label">Resolve</span></button>
                         </div>
                       )}
                     </td>

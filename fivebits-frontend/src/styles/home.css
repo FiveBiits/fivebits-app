@@ -414,17 +414,33 @@
 }
 
 @media (max-width: 600px) {
-  .hero { padding: 72px 0 0; }
-  .hero h1 { font-size: 32px; letter-spacing: -1px; }
-  .hero-sub { font-size: 15px; }
-  .hero-badge { font-size: 12px; padding: 5px 12px 5px 8px; }
-  .hero-stats { flex-direction: column; gap: 20px; }
+  .hero { padding: 64px 0 0; }
+  .hero h1 { font-size: 30px; letter-spacing: -1px; }
+  .hero-sub { font-size: 14px; margin-bottom: 28px; }
+  .hero-btns { gap: 10px; }
+  .btn-white, .btn-ghost { padding: 12px 22px; font-size: 14px; }
+  .hero-stats { flex-direction: column; gap: 20px; padding: 24px 16px; }
   .hero-stat-num { font-size: 24px; }
-  .features { padding: 72px 0; }
+  .hero-stat-label { font-size: 12px; }
+  .features { padding: 64px 0; }
   .features-grid { grid-template-columns: 1fr; }
-  .how-it-works { padding: 72px 0; }
+  .feature-card { padding: 24px 20px; }
+  .how-it-works { padding: 64px 0; }
   .steps { grid-template-columns: 1fr; }
-  .cta { padding: 72px 24px; }
-  .cta h2 { font-size: 28px; }
-  .section-header h2 { font-size: 28px; }
+  .cta { padding: 64px 20px; }
+  .cta h2 { font-size: 26px; }
+  .cta p { font-size: 14px; margin-bottom: 28px; }
+  .section-header h2 { font-size: 26px; }
+  .section-header p { font-size: 14px; }
+  .section-tag { font-size: 11px; letter-spacing: 1.5px; }
+}
+
+@media (max-width: 400px) {
+  .hero h1 { font-size: 26px; }
+  .hero-sub { font-size: 13px; }
+  .hero-btns { flex-direction: column; align-items: center; }
+  .btn-white, .btn-ghost { width: 100%; justify-content: center; padding: 12px 18px; font-size: 13px; }
+  .hero-content { padding: 0 16px; }
+  .cta h2 { font-size: 22px; }
+  .section-header h2 { font-size: 22px; }
 }

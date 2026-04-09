@@ -261,7 +261,33 @@
   }
 }
 
-/* ── Tablet / small laptop — icon-only (769–1024) ── */
+/* ── Desktop — sign buttons icon-only (1025–1199) ── */
+@media (max-width: 1199px) {
+  .navbar-inner {
+    padding: 0 28px;
+    height: 72px;
+  }
+
+  .navbar-logo-img {
+    height: 50px;
+  }
+
+  .navbar-links a {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .navbar .btn-sm .btn-label {
+    display: none;
+  }
+
+  .navbar .btn-sm {
+    padding: 9px 10px;
+    gap: 0;
+  }
+}
+
+/* ── Tablet / small laptop — all icon-only (≤ 1024) ── */
 @media (max-width: 1024px) {
   .navbar-inner {
     padding: 0 24px;
@@ -292,7 +318,7 @@
     height: 22px;
   }
 
-  .btn-sm {
+  .navbar .btn-sm {
     padding: 9px 10px;
     font-size: 0;
     gap: 0;
@@ -333,11 +359,11 @@
     gap: 6px;
   }
 
-  .btn-sm {
+  .navbar .btn-sm {
     padding: 8px 9px;
   }
 
-  .btn-sm svg {
+  .navbar .btn-sm svg {
     width: 18px;
     height: 18px;
   }
@@ -376,11 +402,11 @@
     gap: 4px;
   }
 
-  .btn-sm {
+  .navbar .btn-sm {
     padding: 6px 7px;
   }
 
-  .btn-sm svg {
+  .navbar .btn-sm svg {
     width: 16px;
     height: 16px;
   }

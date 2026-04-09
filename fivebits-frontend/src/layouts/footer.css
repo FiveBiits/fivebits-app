@@ -92,6 +92,34 @@
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .footer-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    padding: 0 24px;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+
+  .footer { padding: 36px 0 20px; }
+  .footer-bottom { padding: 16px 24px 0; }
+}
+
+@media (max-width: 480px) {
+  .footer-inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 0 20px;
+  }
+
+  .footer-brand p { font-size: 13px; }
+  .footer-col h4 { font-size: 13px; margin-bottom: 12px; }
+  .footer-col a { font-size: 13px; margin-bottom: 8px; }
+  .footer-bottom { font-size: 12px; flex-direction: column; gap: 8px; }
+  .footer-logo { height: 36px; }
+}
+@media (max-width: 768px) {
+  .footer-inner {
     grid-template-columns: 1fr;
     gap: 24px;
     padding: 0 20px;

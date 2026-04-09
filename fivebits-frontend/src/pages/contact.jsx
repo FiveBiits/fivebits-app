@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HiOutlinePaperAirplane } from 'react-icons/hi2';
 import '../styles/contact.css';
 
 export default function Contact() {
@@ -32,7 +33,7 @@ export default function Contact() {
             <label>Message</label>
             <textarea required value={form.message} onChange={e => setForm({...form, message: e.target.value})} />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>Send Message</button>
+          <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start' }}><HiOutlinePaperAirplane /> <span className="btn-label">Send Message</span></button>
         </form>
       </div>
 

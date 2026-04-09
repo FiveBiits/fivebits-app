@@ -4,7 +4,7 @@ import { getAllPlaces, searchPlaces } from '../services/placeService';
 import { getAllUniversities } from '../services/universityService';
 import { createBooking } from '../services/bookingService';
 import { HiOutlineLocationMarker, HiOutlineStar, HiOutlineHome, HiOutlineAcademicCap } from 'react-icons/hi';
-import { HiXMark, HiOutlineAdjustmentsHorizontal, HiOutlineBuildingOffice, HiOutlineMapPin } from 'react-icons/hi2';
+import { HiXMark, HiOutlineAdjustmentsHorizontal, HiOutlineBuildingOffice, HiOutlineMapPin, HiOutlineBookOpen, HiOutlineMagnifyingGlass, HiOutlineArrowPath } from 'react-icons/hi2';
 import LocationMap from '../components/LocationMap';
 import '../styles/browse.css';
 
@@ -38,6 +38,9 @@ function PlaceCard({ place, isReco, selectedUni, onSelect, onBook }) {
               <strong>{place.rating.toFixed(1)}</strong>
             </span>
           )}
+          <span className={`place-card-availability ${place.availableRooms === 0 ? 'availability-none' : place.availableRooms <= 2 ? 'availability-low' : 'availability-high'}`}>
+            {place.availableRooms === 0 ? 'Full' : place.availableRooms <= 2 ? 'Limited' : 'Available'}
+          </span>
         </div>
 
         {uniLabel && (
@@ -49,7 +52,7 @@ function PlaceCard({ place, isReco, selectedUni, onSelect, onBook }) {
 
         <div className="place-card-footer">
           <div className="place-card-price">LKR {place.price?.toLocaleString()}<span>/mo</span></div>
-          <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); onBook(place.id); }}>Book</button>
+          <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); onBook(place.id); }}><HiOutlineBookOpen /> <span className="btn-label">Book</span></button>
         </div>
       </div>
     </div>
@@ -207,8 +210,8 @@ export default function Browse() {
             </div>
 
             <div className="filter-actions">
-              <button type="submit" className="btn btn-primary filter-btn">Search</button>
-              <button type="button" className="btn btn-outline filter-btn" onClick={handleReset}>Reset</button>
+              <button type="submit" className="btn btn-primary filter-btn"><HiOutlineMagnifyingGlass /> <span className="btn-label">Search</span></button>
+              <button type="button" className="btn btn-outline filter-btn" onClick={handleReset}><HiOutlineArrowPath /> <span className="btn-label">Reset</span></button>
             </div>
           </form>
         </aside>
@@ -357,7 +360,7 @@ export default function Browse() {
 
             {user?.userType === 'STUDENT' && (
               <button className="btn btn-primary btn-lg place-modal-book" onClick={() => { handleBook(selectedPlace.id); setSelectedPlace(null); }}>
-                Request Booking
+                <HiOutlineBookOpen /> <span className="btn-label">Request Booking</span>
               </button>
             )}
           </div>

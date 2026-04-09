@@ -40,8 +40,31 @@
 .add-listing-form .form-group.full { grid-column: 1 / -1; }
 
 @media (max-width: 768px) {
+  .dashboard { padding: 24px 16px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .dash-table { font-size: 13px; }
   .dash-table th, .dash-table td { padding: 8px; }
   .add-listing-form { grid-template-columns: 1fr; }
+  .dash-section { padding: 18px; overflow-x: auto; }
+  .dash-table { min-width: 600px; }
+  .listing-card { flex-direction: column; align-items: flex-start; }
+  .listing-actions { align-self: flex-end; }
+  .dash-header h1 { font-size: 20px; }
+}
+
+@media (max-width: 480px) {
+  .dashboard { padding: 16px 12px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 20px; }
+  .stat-label { font-size: 12px; }
+  .stat-icon { width: 40px; height: 40px; font-size: 18px; }
+  .dash-tabs { gap: 2px; padding: 3px; }
+  .dash-tab { padding: 7px 12px; font-size: 12px; }
+  .dash-section { padding: 14px 12px; }
+  .dash-section h2 { font-size: 16px; }
+  .dash-empty { padding: 32px 16px; }
+  .dash-empty h3 { font-size: 14px; }
+  .dash-header h1 { font-size: 18px; }
+  .dash-header p { font-size: 13px; }
 }
