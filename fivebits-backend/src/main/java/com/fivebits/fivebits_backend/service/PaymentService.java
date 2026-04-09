@@ -1,5 +1,12 @@
 package com.fivebits.fivebits_backend.service;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.fivebits.fivebits_backend.dto.PaymentRequest;
 import com.fivebits.fivebits_backend.dto.PaymentResponse;
 import com.fivebits.fivebits_backend.model.BoardingPlace;
@@ -10,13 +17,8 @@ import com.fivebits.fivebits_backend.repository.BoardingPlaceRepository;
 import com.fivebits.fivebits_backend.repository.BookingRepository;
 import com.fivebits.fivebits_backend.repository.PaymentRepository;
 import com.fivebits.fivebits_backend.repository.StudentRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -65,11 +67,13 @@ public class PaymentService {
         payment.markSuccessful();
         payment.generateReceipt();
 
-        notificationService.createNotification(
-                payment.getPlace().getOwner().getId(),
-                "Payment of LKR " + payment.getAmount() + " received from " + payment.getStudent().getName(),
-                "PAYMENT"
-        );
+        if (payment.getPlace() != null) {
+            notificationService.createNotification(
+                    payment.getPlace().getOwner().getId(),
+                    "Payment of LKR " + payment.getAmount() + " received from " + payment.getStudent().getName(),
+                    "PAYMENT"
+            );
+        }
 
         return toResponse(paymentRepository.save(payment));
     }

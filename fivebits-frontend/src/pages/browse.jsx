@@ -8,6 +8,54 @@ import { HiXMark, HiOutlineAdjustmentsHorizontal, HiOutlineBuildingOffice, HiOut
 import LocationMap from '../components/LocationMap';
 import '../styles/browse.css';
 
+function PlaceCard({ place, isReco, selectedUni, onSelect, onBook }) {
+  const showSelectedUniDist = selectedUni && place.distance != null;
+  const uniLabel = showSelectedUniDist
+    ? `${place.distance.toFixed(1)} km to ${selectedUni.name}`
+    : place.nearestUniversityName
+      ? `${place.distanceToUniversity} km to ${place.nearestUniversityName}`
+      : null;
+
+  return (
+    <div className={`place-card ${isReco ? 'place-card-reco' : ''}`} onClick={() => onSelect(place)}>
+      <div className="place-card-img">
+        {place.imageUrl ? <img src={place.imageUrl} alt={place.name} /> : <HiOutlineHome size={28} />}
+        {place.verified && <span className="badge badge-success place-card-badge">Verified</span>}
+        {isReco && <span className="badge badge-reco place-card-badge-left">Top Pick</span>}
+      </div>
+      <div className="place-card-body">
+        <h3>{place.name}</h3>
+        <div className="place-card-location"><HiOutlineLocationMarker size={13} /> {place.location}</div>
+
+        <div className="place-card-details">
+          <span className="place-card-detail">
+            <HiOutlineBuildingOffice size={12} />
+            <strong>{place.availableRooms}</strong> rooms
+          </span>
+          {place.rating > 0 && (
+            <span className="place-card-detail">
+              <HiOutlineStar size={12} />
+              <strong>{place.rating.toFixed(1)}</strong>
+            </span>
+          )}
+        </div>
+
+        {uniLabel && (
+          <div className="place-card-uni">
+            <HiOutlineAcademicCap size={12} />
+            <span>{uniLabel}</span>
+          </div>
+        )}
+
+        <div className="place-card-footer">
+          <div className="place-card-price">LKR {place.price?.toLocaleString()}<span>/mo</span></div>
+          <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); onBook(place.id); }}>Book</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Browse() {
   const { user } = useAuth();
   const [places, setPlaces] = useState([]);
@@ -118,54 +166,6 @@ export default function Browse() {
     }
   };
 
-  const PlaceCard = ({ place, isReco }) => {
-    const showSelectedUniDist = selectedUni && place.distance != null;
-    const uniLabel = showSelectedUniDist
-      ? `${place.distance.toFixed(1)} km to ${selectedUni.name}`
-      : place.nearestUniversityName
-        ? `${place.distanceToUniversity} km to ${place.nearestUniversityName}`
-        : null;
-
-    return (
-      <div className={`place-card ${isReco ? 'place-card-reco' : ''}`} onClick={() => setSelectedPlace(place)}>
-        <div className="place-card-img">
-          {place.imageUrl ? <img src={place.imageUrl} alt={place.name} /> : <HiOutlineHome size={28} />}
-          {place.verified && <span className="badge badge-success place-card-badge">Verified</span>}
-          {isReco && <span className="badge badge-reco place-card-badge-left">Top Pick</span>}
-        </div>
-        <div className="place-card-body">
-          <h3>{place.name}</h3>
-          <div className="place-card-location"><HiOutlineLocationMarker size={13} /> {place.location}</div>
-
-          <div className="place-card-details">
-            <span className="place-card-detail">
-              <HiOutlineBuildingOffice size={12} />
-              <strong>{place.availableRooms}</strong> rooms
-            </span>
-            {place.rating > 0 && (
-              <span className="place-card-detail">
-                <HiOutlineStar size={12} />
-                <strong>{place.rating.toFixed(1)}</strong>
-              </span>
-            )}
-          </div>
-
-          {uniLabel && (
-            <div className="place-card-uni">
-              <HiOutlineAcademicCap size={12} />
-              <span>{uniLabel}</span>
-            </div>
-          )}
-
-          <div className="place-card-footer">
-            <div className="place-card-price">LKR {place.price?.toLocaleString()}<span>/mo</span></div>
-            <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); handleBook(place.id); }}>Book</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <main className="browse-page">
       <div className="browse-layout">
@@ -244,7 +244,7 @@ export default function Browse() {
                 <span className="reco-badge">Near {selectedUni?.name}</span>
               </div>
               <div className="places-grid">
-                {recommendations.map(p => <PlaceCard key={`reco-${p.id}`} place={p} isReco />)}
+                {recommendations.map(p => <PlaceCard key={`reco-${p.id}`} place={p} isReco selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
               </div>
             </div>
           )}
@@ -267,7 +267,7 @@ export default function Browse() {
             </div>
           ) : (
             <div className="places-grid">
-              {places.map(p => <PlaceCard key={p.id} place={p} />)}
+              {places.map(p => <PlaceCard key={p.id} place={p} selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
             </div>
           )}
         </div>

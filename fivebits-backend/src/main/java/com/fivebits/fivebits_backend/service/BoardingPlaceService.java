@@ -45,7 +45,7 @@ public class BoardingPlaceService {
         place.setOwner(owner);
 
         BoardingPlace saved = placeRepository.save(place);
-        return toResponse(saved, null, null);
+        return toResponse(saved, null, null, universityRepository.findAll());
     }
 
     @Transactional
@@ -66,24 +66,26 @@ public class BoardingPlaceService {
         if (request.getImageUrl() != null) place.setImageUrl(request.getImageUrl());
 
         BoardingPlace saved = placeRepository.save(place);
-        return toResponse(saved, null, null);
+        return toResponse(saved, null, null, universityRepository.findAll());
     }
 
     public BoardingPlaceResponse getPlace(Long placeId) {
         BoardingPlace place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new RuntimeException("Boarding place not found"));
-        return toResponse(place, null, null);
+        return toResponse(place, null, null, universityRepository.findAll());
     }
 
     public List<BoardingPlaceResponse> getAllPlaces() {
+        List<University> universities = universityRepository.findAll();
         return placeRepository.findAll().stream()
-                .map(p -> toResponse(p, null, null))
+                .map(p -> toResponse(p, null, null, universities))
                 .collect(Collectors.toList());
     }
 
     public List<BoardingPlaceResponse> getOwnerPlaces(Long ownerId) {
+        List<University> universities = universityRepository.findAll();
         return placeRepository.findByOwnerId(ownerId).stream()
-                .map(p -> toResponse(p, null, null))
+                .map(p -> toResponse(p, null, null, universities))
                 .collect(Collectors.toList());
     }
 
@@ -99,6 +101,7 @@ public class BoardingPlaceService {
         }
 
         final University uni = selectedUni;
+        List<University> universities = universityRepository.findAll();
 
         return results.stream()
                 .filter(p -> {
@@ -114,7 +117,7 @@ public class BoardingPlaceService {
                     if (uni != null && p.getLatitude() != 0 && p.getLongitude() != 0) {
                         dist = Math.round(p.calculateDistance(uni.getLatitude(), uni.getLongitude()) * 100.0) / 100.0;
                     }
-                    return toResponse(p, dist, null);
+                    return toResponse(p, dist, null, universities);
                 })
                 .collect(Collectors.toList());
     }
@@ -123,6 +126,7 @@ public class BoardingPlaceService {
             Double maxDistance, Integer minRooms, int limit) {
         double effectiveMaxPrice = (maxPrice != null) ? maxPrice : 50000;
         List<BoardingPlace> all = placeRepository.findByAvailableRoomsGreaterThan(0);
+        List<University> universities = universityRepository.findAll();
 
         return all.stream()
                 .filter(p -> {
@@ -131,13 +135,12 @@ public class BoardingPlaceService {
                         double dist = p.calculateDistance(lat, lng);
                         if (dist > maxDistance) return false;
                     }
-                    if (maxPrice != null && p.getPrice() > maxPrice) return false;
-                    return true;
+                    return maxPrice == null || p.getPrice() <= maxPrice;
                 })
                 .map(p -> {
                     double distance = p.calculateDistance(lat, lng);
                     double rankScore = p.calculateRankScore(lat, lng, effectiveMaxPrice);
-                    return toResponse(p, distance, rankScore);
+                    return toResponse(p, distance, rankScore, universities);
                 })
                 .sorted((a, b) -> Double.compare(b.getRankScore(), a.getRankScore()))
                 .limit(limit)
@@ -154,10 +157,10 @@ public class BoardingPlaceService {
         BoardingPlace place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new RuntimeException("Boarding place not found"));
         place.setVerified(true);
-        return toResponse(placeRepository.save(place), null, null);
+        return toResponse(placeRepository.save(place), null, null, universityRepository.findAll());
     }
 
-    private BoardingPlaceResponse toResponse(BoardingPlace place, Double distance, Double rankScore) {
+    private BoardingPlaceResponse toResponse(BoardingPlace place, Double distance, Double rankScore, List<University> universities) {
         BoardingPlaceResponse resp = new BoardingPlaceResponse();
         resp.setId(place.getId());
         resp.setName(place.getName());
@@ -182,7 +185,6 @@ public class BoardingPlaceService {
 
         // Calculate nearest university
         if (place.getLatitude() != 0 && place.getLongitude() != 0) {
-            List<University> universities = universityRepository.findAll();
             String nearestName = null;
             double nearestDist = Double.MAX_VALUE;
             for (University uni : universities) {

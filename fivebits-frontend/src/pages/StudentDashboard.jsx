@@ -147,7 +147,22 @@ export default function StudentDashboard() {
           <h2>Report & Track Issues</h2>
           {msg && <div className="auth-error" style={{marginBottom: 16, background: msg.includes('success') ? '#d1fae5' : undefined, color: msg.includes('success') ? '#065f46' : undefined}}>{msg}</div>}
           <form onSubmit={handleSubmitIssue} style={{marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap'}}>
-            <input className="form-group" style={{padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: '0 0 120px'}} type="number" placeholder="Place ID" required value={issueForm.placeId} onChange={e => setIssueForm({...issueForm, placeId: e.target.value})} />
+            <select
+              className="form-group"
+              style={{padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: '0 0 200px'}}
+              required
+              value={issueForm.placeId}
+              onChange={e => setIssueForm({...issueForm, placeId: e.target.value})}
+            >
+              <option value="">Select Boarding Place</option>
+              {[...new Map(
+                bookings
+                  .filter(b => b.status === 'CONFIRMED' || b.status === 'ACTIVE')
+                  .map(b => [b.placeId, b])
+              ).values()].map(b => (
+                <option key={b.placeId} value={b.placeId}>{b.placeName}</option>
+              ))}
+            </select>
             <input className="form-group" style={{padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: 1}} placeholder="Describe the issue..." required value={issueForm.description} onChange={e => setIssueForm({...issueForm, description: e.target.value})} />
             <button type="submit" className="btn btn-primary">Submit Issue</button>
           </form>

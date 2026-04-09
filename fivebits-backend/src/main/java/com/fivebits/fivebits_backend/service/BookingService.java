@@ -1,5 +1,11 @@
 package com.fivebits.fivebits_backend.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.fivebits.fivebits_backend.dto.BookingRequest;
 import com.fivebits.fivebits_backend.dto.BookingResponse;
 import com.fivebits.fivebits_backend.model.BoardingPlace;
@@ -8,12 +14,8 @@ import com.fivebits.fivebits_backend.model.Student;
 import com.fivebits.fivebits_backend.repository.BoardingPlaceRepository;
 import com.fivebits.fivebits_backend.repository.BookingRepository;
 import com.fivebits.fivebits_backend.repository.StudentRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +59,10 @@ public class BookingService {
     public BookingResponse confirmBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (booking.getPlace().getAvailableRooms() <= 0) {
+            throw new RuntimeException("No rooms available to confirm this booking");
+        }
 
         booking.confirmBooking();
         booking.getPlace().reduceAvailableRooms();
