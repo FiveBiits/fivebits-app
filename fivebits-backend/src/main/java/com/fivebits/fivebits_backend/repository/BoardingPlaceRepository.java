@@ -20,6 +20,6 @@ public interface BoardingPlaceRepository extends JpaRepository<BoardingPlace, Lo
 
     List<BoardingPlace> findByAvailableRoomsGreaterThan(int rooms);
 
-    @Query("SELECT bp FROM BoardingPlace bp WHERE bp.verified = true AND bp.availableRooms > 0 AND (:location IS NULL OR LOWER(bp.location) LIKE LOWER(CONCAT('%', :location, '%'))) AND (:maxPrice IS NULL OR bp.price <= :maxPrice)")
+    @Query("SELECT bp FROM BoardingPlace bp WHERE bp.availableRooms > 0 AND (:location IS NULL OR LOWER(bp.location) LIKE LOWER(CONCAT('%', CAST(:location AS string), '%'))) AND (:maxPrice IS NULL OR bp.price <= :maxPrice)")
     List<BoardingPlace> searchPlaces(@Param("location") String location, @Param("maxPrice") Double maxPrice);
 }
