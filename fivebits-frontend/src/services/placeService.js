@@ -1,5 +1,6 @@
 import api from './authService';
 
+export const getAllPlaces = () => api.get('/api/places');
 export const getOwnerPlaces = (ownerId) => api.get(`/api/places/owner/${ownerId}`);
 export const searchPlaces = (params) => api.get('/api/places/search', { params });
 export const getRecommendations = (params) => api.get('/api/places/recommendations', { params });

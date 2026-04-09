@@ -91,10 +91,8 @@ public class BoardingPlaceService {
 
     public List<BoardingPlaceResponse> searchPlaces(String location, Double maxPrice,
             Long universityId, Double maxDistance, Integer minRooms) {
-        // Start with the base query
         List<BoardingPlace> results = placeRepository.searchPlaces(location, maxPrice);
 
-        // If a university is selected, calculate distance and filter
         University selectedUni = null;
         if (universityId != null) {
             selectedUni = universityRepository.findById(universityId).orElse(null);
@@ -106,9 +104,17 @@ public class BoardingPlaceService {
         return results.stream()
                 .filter(p -> {
                     if (minRooms != null && p.getAvailableRooms() < minRooms) return false;
-                    if (uni != null && maxDistance != null && p.getLatitude() != 0 && p.getLongitude() != 0) {
-                        double dist = p.calculateDistance(uni.getLatitude(), uni.getLongitude());
-                        if (dist > maxDistance) return false;
+                    if (maxDistance != null && p.getLatitude() != 0 && p.getLongitude() != 0) {
+                        if (uni != null) {
+                            double dist = p.calculateDistance(uni.getLatitude(), uni.getLongitude());
+                            if (dist > maxDistance) return false;
+                        } else {
+                            // No university selected: filter by distance to nearest university
+                            double nearest = universities.stream()
+                                    .mapToDouble(u -> p.calculateDistance(u.getLatitude(), u.getLongitude()))
+                                    .min().orElse(Double.MAX_VALUE);
+                            if (nearest > maxDistance) return false;
+                        }
                     }
                     return true;
                 })

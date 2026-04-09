@@ -36,7 +36,10 @@ public class AuthService {
 
         User saved;
 
+        String userType;
+
         if ("STUDENT".equalsIgnoreCase(req.getUserType())) {
+            userType = "STUDENT";
             Student s = new Student();
             s.setName(req.getName());
             s.setEmail(req.getEmail());
@@ -48,6 +51,7 @@ public class AuthService {
             saved = studentRepository.save(s);
 
         } else if ("OWNER".equalsIgnoreCase(req.getUserType())) {
+            userType = "OWNER";
             BoardingOwner o = new BoardingOwner();
             o.setName(req.getName());
             o.setEmail(req.getEmail());
@@ -62,8 +66,8 @@ public class AuthService {
             throw new RuntimeException("userType must be STUDENT or OWNER.");
         }
 
-        String token = jwtUtil.generateToken(saved.getEmail(), saved.getUserType(), saved.getId());
-        return new AuthResponse(token, saved.getUserType(), saved.getName(), saved.getEmail(), saved.getId());
+        String token = jwtUtil.generateToken(saved.getEmail(), userType, saved.getId());
+        return new AuthResponse(token, userType, saved.getName(), saved.getEmail(), saved.getId());
     }
 
     public AuthResponse login(LoginRequest req) {

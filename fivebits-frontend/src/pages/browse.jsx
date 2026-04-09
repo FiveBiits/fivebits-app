@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { searchPlaces, getRecommendations } from '../services/placeService';
+import { getAllPlaces, searchPlaces } from '../services/placeService';
 import { getAllUniversities } from '../services/universityService';
 import { createBooking } from '../services/bookingService';
 import { HiOutlineLocationMarker, HiOutlineStar, HiOutlineHome, HiOutlineAcademicCap } from 'react-icons/hi';
@@ -59,19 +59,32 @@ function PlaceCard({ place, isReco, selectedUni, onSelect, onBook }) {
 export default function Browse() {
   const { user } = useAuth();
   const [places, setPlaces] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
   const [universities, setUniversities] = useState([]);
   const [selectedUni, setSelectedUni] = useState(null);
   const [filters, setFilters] = useState({
     location: '', maxPrice: '', universityId: '', maxDistance: '', minRooms: ''
   });
+  const [filtersActive, setFiltersActive] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingMsg, setBookingMsg] = useState('');
 
+  const hasAnyFilter = (f) => !!(f.location || f.maxPrice || f.universityId || f.maxDistance || f.minRooms);
+
+  // Top 5: sort by distance to selected uni, or distance to nearest uni
+  const top5 = filtersActive
+    ? [...places].sort((a, b) => {
+        const dA = selectedUni ? (a.distance ?? Infinity) : (a.distanceToUniversity ?? Infinity);
+        const dB = selectedUni ? (b.distance ?? Infinity) : (b.distanceToUniversity ?? Infinity);
+        return dA - dB;
+      }).slice(0, 5)
+    : [];
+  const top5Ids = new Set(top5.map(p => p.id));
+  const otherPlaces = filtersActive ? places.filter(p => !top5Ids.has(p.id)) : [];
+
   useEffect(() => {
     loadUniversities();
-    loadPlaces();
+    loadAllPlaces();
   }, []);
 
   const loadUniversities = async () => {
@@ -81,78 +94,55 @@ export default function Browse() {
     } catch (err) { console.error(err); }
   };
 
-  const loadPlaces = async () => {
+  const loadAllPlaces = async () => {
     setLoading(true);
     try {
-      const res = await searchPlaces({});
+      const res = await getAllPlaces();
       setPlaces(res.data);
+      setFiltersActive(false);
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
-  const loadRecommendations = async (uni) => {
-    if (!uni) { setRecommendations([]); return; }
+  const runFilteredSearch = async (f) => {
+    if (!hasAnyFilter(f)) {
+      loadAllPlaces();
+      return;
+    }
+    setLoading(true);
     try {
-      const params = { lat: uni.latitude, lng: uni.longitude, limit: 5 };
-      if (filters.maxPrice) params.maxPrice = parseFloat(filters.maxPrice);
-      if (filters.maxDistance) params.maxDistance = parseFloat(filters.maxDistance);
-      if (filters.minRooms) params.minRooms = parseInt(filters.minRooms);
-      const res = await getRecommendations(params);
-      setRecommendations(res.data);
+      const params = {};
+      if (f.location) params.location = f.location;
+      if (f.maxPrice) params.maxPrice = parseFloat(f.maxPrice);
+      if (f.universityId) params.universityId = parseInt(f.universityId);
+      if (f.maxDistance) params.maxDistance = parseFloat(f.maxDistance);
+      if (f.minRooms) params.minRooms = parseInt(f.minRooms);
+      const res = await searchPlaces(params);
+      setPlaces(res.data);
+      setFiltersActive(true);
     } catch (err) { console.error(err); }
+    setLoading(false);
   };
 
-  const handleUniversityChange = async (e) => {
+  const handleUniversityChange = (e) => {
     const uniId = e.target.value;
     const newFilters = { ...filters, universityId: uniId };
-    if (!uniId) newFilters.maxDistance = '';
     setFilters(newFilters);
-    const uni = universities.find(u => u.id === parseInt(uniId));
-    setSelectedUni(uni || null);
-
-    // Auto-search when university changes
-    setLoading(true);
-    try {
-      const params = {};
-      if (newFilters.location) params.location = newFilters.location;
-      if (newFilters.maxPrice) params.maxPrice = parseFloat(newFilters.maxPrice);
-      if (uniId) params.universityId = parseInt(uniId);
-      if (newFilters.maxDistance) params.maxDistance = parseFloat(newFilters.maxDistance);
-      if (newFilters.minRooms) params.minRooms = parseInt(newFilters.minRooms);
-      const res = await searchPlaces(params);
-      setPlaces(res.data);
-    } catch (err) { console.error(err); }
-    setLoading(false);
-
-    if (uni) {
-      loadRecommendations(uni);
-    } else {
-      setRecommendations([]);
-    }
+    const uni = universities.find(u => u.id === parseInt(uniId)) || null;
+    setSelectedUni(uni);
+    runFilteredSearch(newFilters);
   };
 
-  const handleSearch = async (e) => {
+  const handleSearch = (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const params = {};
-      if (filters.location) params.location = filters.location;
-      if (filters.maxPrice) params.maxPrice = parseFloat(filters.maxPrice);
-      if (filters.universityId) params.universityId = parseInt(filters.universityId);
-      if (filters.maxDistance) params.maxDistance = parseFloat(filters.maxDistance);
-      if (filters.minRooms) params.minRooms = parseInt(filters.minRooms);
-      const res = await searchPlaces(params);
-      setPlaces(res.data);
-      if (selectedUni) loadRecommendations(selectedUni);
-    } catch (err) { console.error(err); }
-    setLoading(false);
+    runFilteredSearch(filters);
   };
 
   const handleReset = () => {
-    setFilters({ location: '', maxPrice: '', universityId: '', maxDistance: '', minRooms: '' });
+    const empty = { location: '', maxPrice: '', universityId: '', maxDistance: '', minRooms: '' };
+    setFilters(empty);
     setSelectedUni(null);
-    setRecommendations([]);
-    loadPlaces();
+    loadAllPlaces();
   };
 
   const handleBook = async (placeId) => {
@@ -187,17 +177,15 @@ export default function Browse() {
                   ))}
                 </select>
               </div>
-              {selectedUni && (
-                <div className="filter-group">
-                  <label><HiOutlineMapPin size={13} /> Max Distance (km)</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 5"
-                    value={filters.maxDistance}
-                    onChange={e => setFilters({...filters, maxDistance: e.target.value})}
-                  />
-                </div>
-              )}
+              <div className="filter-group">
+                <label><HiOutlineMapPin size={13} /> Max Distance (km)</label>
+                <input
+                  type="number"
+                  placeholder={selectedUni ? `From ${selectedUni.name}` : 'From nearest university'}
+                  value={filters.maxDistance}
+                  onChange={e => setFilters({...filters, maxDistance: e.target.value})}
+                />
+              </div>
             </div>
 
             <div className="filter-divider" />
@@ -237,38 +225,67 @@ export default function Browse() {
             </div>
           )}
 
-          {recommendations.length > 0 && (
-            <div className="reco-section">
-              <div className="reco-header">
-                <h2><HiOutlineStar size={20} /> Top 5 Recommendations</h2>
-                <span className="reco-badge">Near {selectedUni?.name}</span>
-              </div>
-              <div className="places-grid">
-                {recommendations.map(p => <PlaceCard key={`reco-${p.id}`} place={p} isReco selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
-              </div>
-            </div>
-          )}
-
-          <div className="all-places-header">
-            <h2>All Places</h2>
-            <span className="results-count">{places.length} results</span>
-          </div>
-
           {loading ? (
             <div className="empty-state">
               <div className="empty-state-icon"><HiOutlineHome size={40} /></div>
               <p>Loading boarding places...</p>
             </div>
-          ) : places.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon"><HiOutlineHome size={40} /></div>
-              <h3>No boarding places found</h3>
-              <p>Try adjusting your search filters</p>
-            </div>
+          ) : filtersActive ? (
+            /* ── Filtered view: Top 5 + Other Places ── */
+            places.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon"><HiOutlineHome size={40} /></div>
+                <h3>No Results Found</h3>
+                <p>Try adjusting your search filters</p>
+              </div>
+            ) : (
+              <>
+                {/* Top 5 */}
+                <div className="reco-section">
+                  <div className="reco-header">
+                    <h2><HiOutlineStar size={20} /> Top {top5.length} Recommendations</h2>
+                    <span className="reco-badge">
+                      {selectedUni ? `Near ${selectedUni.name}` : 'Closest to nearest university'}
+                    </span>
+                  </div>
+                  <div className="places-grid">
+                    {top5.map(p => <PlaceCard key={`reco-${p.id}`} place={p} isReco selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
+                  </div>
+                </div>
+
+                {/* Others */}
+                {otherPlaces.length > 0 && (
+                  <>
+                    <div className="all-places-header">
+                      <h2>Other Places</h2>
+                      <span className="results-count">{otherPlaces.length} more</span>
+                    </div>
+                    <div className="places-grid">
+                      {otherPlaces.map(p => <PlaceCard key={p.id} place={p} selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
+                    </div>
+                  </>
+                )}
+              </>
+            )
           ) : (
-            <div className="places-grid">
-              {places.map(p => <PlaceCard key={p.id} place={p} selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
-            </div>
+            /* ── Default view: All places, no top 5 ── */
+            places.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon"><HiOutlineHome size={40} /></div>
+                <h3>No boarding places found</h3>
+                <p>There are no listings yet</p>
+              </div>
+            ) : (
+              <>
+                <div className="all-places-header">
+                  <h2>All Places</h2>
+                  <span className="results-count">{places.length} listings</span>
+                </div>
+                <div className="places-grid">
+                  {places.map(p => <PlaceCard key={p.id} place={p} selectedUni={selectedUni} onSelect={setSelectedPlace} onBook={handleBook} />)}
+                </div>
+              </>
+            )
           )}
         </div>
       </div>
