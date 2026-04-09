@@ -1,10 +1,10 @@
 package com.fivebits.fivebits_backend.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -30,4 +30,6 @@ public class BoardingPlaceResponse {
     private LocalDateTime createdAt;
     private Double distance;
     private Double rankScore;
+    private String nearestUniversityName;
+    private Double distanceToUniversity;
 }

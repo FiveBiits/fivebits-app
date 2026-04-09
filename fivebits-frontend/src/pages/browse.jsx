@@ -1,36 +1,68 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getAllPlaces, searchPlaces, getRecommendations } from '../services/placeService';
+import { searchPlaces, getRecommendations } from '../services/placeService';
+import { getAllUniversities } from '../services/universityService';
 import { createBooking } from '../services/bookingService';
-import { HiOutlineLocationMarker, HiOutlineStar, HiOutlineHome } from 'react-icons/hi';
-import { HiXMark } from 'react-icons/hi2';
+import { HiOutlineLocationMarker, HiOutlineStar, HiOutlineHome, HiOutlineAcademicCap } from 'react-icons/hi';
+import { HiXMark, HiOutlineAdjustmentsHorizontal, HiOutlineBuildingOffice, HiOutlineMapPin } from 'react-icons/hi2';
 import '../styles/browse.css';
 
 export default function Browse() {
   const { user } = useAuth();
   const [places, setPlaces] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
-  const [filters, setFilters] = useState({ location: '', maxPrice: '' });
+  const [universities, setUniversities] = useState([]);
+  const [selectedUni, setSelectedUni] = useState(null);
+  const [filters, setFilters] = useState({
+    location: '', maxPrice: '', universityId: '', maxDistance: '', minRooms: ''
+  });
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingMsg, setBookingMsg] = useState('');
 
-  useEffect(() => { loadPlaces(); loadRecommendations(); }, []);
+  useEffect(() => {
+    loadUniversities();
+    loadPlaces();
+  }, []);
+
+  const loadUniversities = async () => {
+    try {
+      const res = await getAllUniversities();
+      setUniversities(res.data);
+    } catch (err) { console.error(err); }
+  };
 
   const loadPlaces = async () => {
     setLoading(true);
     try {
-      const res = await getAllPlaces();
+      const res = await searchPlaces({});
       setPlaces(res.data);
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
-  const loadRecommendations = async () => {
+  const loadRecommendations = async (uni) => {
+    if (!uni) { setRecommendations([]); return; }
     try {
-      const res = await getRecommendations({ lat: 6.7952, lng: 79.9009, maxPrice: 30000, limit: 5 });
+      const params = { lat: uni.latitude, lng: uni.longitude, limit: 5 };
+      if (filters.maxPrice) params.maxPrice = parseFloat(filters.maxPrice);
+      if (filters.maxDistance) params.maxDistance = parseFloat(filters.maxDistance);
+      if (filters.minRooms) params.minRooms = parseInt(filters.minRooms);
+      const res = await getRecommendations(params);
       setRecommendations(res.data);
     } catch (err) { console.error(err); }
+  };
+
+  const handleUniversityChange = (e) => {
+    const uniId = e.target.value;
+    setFilters({ ...filters, universityId: uniId });
+    const uni = universities.find(u => u.id === parseInt(uniId));
+    setSelectedUni(uni || null);
+    if (uni) {
+      loadRecommendations(uni);
+    } else {
+      setRecommendations([]);
+    }
   };
 
   const handleSearch = async (e) => {
@@ -40,10 +72,21 @@ export default function Browse() {
       const params = {};
       if (filters.location) params.location = filters.location;
       if (filters.maxPrice) params.maxPrice = parseFloat(filters.maxPrice);
+      if (filters.universityId) params.universityId = parseInt(filters.universityId);
+      if (filters.maxDistance) params.maxDistance = parseFloat(filters.maxDistance);
+      if (filters.minRooms) params.minRooms = parseInt(filters.minRooms);
       const res = await searchPlaces(params);
       setPlaces(res.data);
+      if (selectedUni) loadRecommendations(selectedUni);
     } catch (err) { console.error(err); }
     setLoading(false);
+  };
+
+  const handleReset = () => {
+    setFilters({ location: '', maxPrice: '', universityId: '', maxDistance: '', minRooms: '' });
+    setSelectedUni(null);
+    setRecommendations([]);
+    loadPlaces();
   };
 
   const handleBook = async (placeId) => {
@@ -57,20 +100,43 @@ export default function Browse() {
     }
   };
 
-  const PlaceCard = ({ place }) => (
-    <div className="place-card" onClick={() => setSelectedPlace(place)}>
+  const PlaceCard = ({ place, isReco }) => (
+    <div className={`place-card ${isReco ? 'place-card-reco' : ''}`} onClick={() => setSelectedPlace(place)}>
       <div className="place-card-img">
         {place.imageUrl ? <img src={place.imageUrl} alt={place.name} /> : <HiOutlineHome size={32} />}
         {place.verified && <span className="badge badge-success place-card-badge">Verified</span>}
+        {isReco && <span className="badge badge-reco place-card-badge-left">Top Pick</span>}
       </div>
       <div className="place-card-body">
         <h3>{place.name}</h3>
         <div className="place-card-location"><HiOutlineLocationMarker size={14} /> {place.location}</div>
+
         <div className="place-card-details">
-          <span className="place-card-detail"><strong>{place.availableRooms}</strong> rooms</span>
-          {place.rating > 0 && <span className="place-card-detail"><HiOutlineStar size={12} /> <strong>{place.rating.toFixed(1)}</strong></span>}
-          {place.distance != null && <span className="place-card-detail"><strong>{place.distance.toFixed(1)}</strong> km</span>}
+          <span className="place-card-detail">
+            <HiOutlineBuildingOffice size={13} />
+            <strong>{place.availableRooms}</strong> rooms
+          </span>
+          {place.rating > 0 && (
+            <span className="place-card-detail">
+              <HiOutlineStar size={13} />
+              <strong>{place.rating.toFixed(1)}</strong>
+            </span>
+          )}
+          {place.distance != null && (
+            <span className="place-card-detail place-card-distance">
+              <HiOutlineMapPin size={13} />
+              <strong>{place.distance.toFixed(1)}</strong> km
+            </span>
+          )}
         </div>
+
+        {place.nearestUniversityName && (
+          <div className="place-card-uni">
+            <HiOutlineAcademicCap size={13} />
+            <span>{place.distanceToUniversity} km to {place.nearestUniversityName}</span>
+          </div>
+        )}
+
         <div className="place-card-footer">
           <div className="place-card-price">LKR {place.price?.toLocaleString()}<span>/mo</span></div>
           <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); handleBook(place.id); }}>Book Now</button>
@@ -83,43 +149,101 @@ export default function Browse() {
     <main className="browse-page">
       <div className="browse-layout">
         <aside className="browse-filters">
-          <h3>Filter Places</h3>
+          <div className="filter-header">
+            <HiOutlineAdjustmentsHorizontal size={18} />
+            <h3>Filter Places</h3>
+          </div>
+
           <form onSubmit={handleSearch}>
-            <div className="filter-group">
-              <label>Location</label>
-              <input placeholder="e.g. Moratuwa" value={filters.location} onChange={e => setFilters({...filters, location: e.target.value})} />
+            <div className="filter-section">
+              <div className="filter-section-title">University</div>
+              <div className="filter-group">
+                <label><HiOutlineAcademicCap size={13} /> Select University</label>
+                <select value={filters.universityId} onChange={handleUniversityChange}>
+                  <option value="">All Universities</option>
+                  {universities.map(u => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              </div>
+              {selectedUni && (
+                <div className="filter-group">
+                  <label><HiOutlineMapPin size={13} /> Max Distance (km)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 5"
+                    value={filters.maxDistance}
+                    onChange={e => setFilters({...filters, maxDistance: e.target.value})}
+                  />
+                </div>
+              )}
             </div>
-            <div className="filter-group">
-              <label>Max Price (LKR)</label>
-              <input type="number" placeholder="e.g. 15000" value={filters.maxPrice} onChange={e => setFilters({...filters, maxPrice: e.target.value})} />
+
+            <div className="filter-divider" />
+
+            <div className="filter-section">
+              <div className="filter-section-title">Preferences</div>
+              <div className="filter-group">
+                <label><HiOutlineLocationMarker size={13} /> Location</label>
+                <input placeholder="e.g. Moratuwa" value={filters.location} onChange={e => setFilters({...filters, location: e.target.value})} />
+              </div>
+              <div className="filter-group">
+                <label>Max Price (LKR)</label>
+                <input type="number" placeholder="e.g. 15000" value={filters.maxPrice} onChange={e => setFilters({...filters, maxPrice: e.target.value})} />
+              </div>
+              <div className="filter-group">
+                <label><HiOutlineBuildingOffice size={13} /> Min Rooms Available</label>
+                <input type="number" placeholder="e.g. 1" min="1" value={filters.minRooms} onChange={e => setFilters({...filters, minRooms: e.target.value})} />
+              </div>
             </div>
-            <button type="submit" className="btn btn-primary filter-btn">Search</button>
-            <button type="button" className="btn btn-outline filter-btn" style={{marginTop: 8}} onClick={() => { setFilters({location:'', maxPrice:''}); loadPlaces(); }}>Reset</button>
+
+            <div className="filter-actions">
+              <button type="submit" className="btn btn-primary filter-btn">Search</button>
+              <button type="button" className="btn btn-outline filter-btn" onClick={handleReset}>Reset</button>
+            </div>
           </form>
         </aside>
 
-        <div>
+        <div className="browse-content">
           <div className="browse-header">
             <h1>Browse Boarding Places</h1>
-            <p>Find the perfect boarding place near your university</p>
+            <p>{selectedUni ? `Showing places near ${selectedUni.name}` : 'Find the perfect boarding place near your university'}</p>
           </div>
 
-          {bookingMsg && <div className="auth-error" style={{marginBottom: 16, background: bookingMsg.includes('success') ? '#d1fae5' : undefined, color: bookingMsg.includes('success') ? '#065f46' : undefined}}>{bookingMsg}</div>}
+          {bookingMsg && (
+            <div className={`browse-toast ${bookingMsg.includes('success') ? 'browse-toast-success' : 'browse-toast-error'}`}>
+              {bookingMsg}
+            </div>
+          )}
 
           {recommendations.length > 0 && (
             <div className="reco-section">
-              <h2><HiOutlineStar size={20} color="var(--accent)" /> Top Recommendations</h2>
+              <div className="reco-header">
+                <h2><HiOutlineStar size={20} /> Top 5 Recommendations</h2>
+                <span className="reco-badge">Near {selectedUni?.name}</span>
+              </div>
               <div className="places-grid">
-                {recommendations.map(p => <PlaceCard key={p.id} place={p} />)}
+                {recommendations.map(p => <PlaceCard key={`reco-${p.id}`} place={p} isReco />)}
               </div>
             </div>
           )}
 
-          <h2 style={{fontSize: 20, fontWeight: 700, marginBottom: 16}}>All Places ({places.length})</h2>
+          <div className="all-places-header">
+            <h2>All Places</h2>
+            <span className="results-count">{places.length} results</span>
+          </div>
+
           {loading ? (
-            <div className="empty-state"><p>Loading boarding places...</p></div>
+            <div className="empty-state">
+              <div className="empty-state-icon"><HiOutlineHome size={40} /></div>
+              <p>Loading boarding places...</p>
+            </div>
           ) : places.length === 0 ? (
-            <div className="empty-state"><h3>No boarding places found</h3><p>Try adjusting your search filters</p></div>
+            <div className="empty-state">
+              <div className="empty-state-icon"><HiOutlineHome size={40} /></div>
+              <h3>No boarding places found</h3>
+              <p>Try adjusting your search filters</p>
+            </div>
           ) : (
             <div className="places-grid">
               {places.map(p => <PlaceCard key={p.id} place={p} />)}
@@ -131,30 +255,70 @@ export default function Browse() {
       {selectedPlace && (
         <div className="place-modal-overlay" onClick={() => setSelectedPlace(null)}>
           <div className="place-modal" onClick={e => e.stopPropagation()}>
-            <button className="place-modal-close" onClick={() => setSelectedPlace(null)}><HiXMark /></button>
-            <h2>{selectedPlace.name}</h2>
-            <p style={{color:'var(--text-secondary)', marginBottom: 8}}><HiOutlineLocationMarker size={14} /> {selectedPlace.location} {selectedPlace.address && `— ${selectedPlace.address}`}</p>
-            {selectedPlace.verified && <span className="badge badge-success">Verified</span>}
+            <button className="place-modal-close" onClick={() => setSelectedPlace(null)}><HiXMark size={18} /></button>
+
+            <div className="place-modal-header">
+              <h2>{selectedPlace.name}</h2>
+              <p><HiOutlineLocationMarker size={14} /> {selectedPlace.location} {selectedPlace.address && `— ${selectedPlace.address}`}</p>
+              {selectedPlace.verified && <span className="badge badge-success">Verified</span>}
+            </div>
 
             <div className="place-modal-info">
-              <div className="place-modal-info-item"><label>Monthly Rent</label><p>LKR {selectedPlace.price?.toLocaleString()}</p></div>
-              <div className="place-modal-info-item"><label>Available Rooms</label><p>{selectedPlace.availableRooms} / {selectedPlace.totalRooms}</p></div>
-              <div className="place-modal-info-item"><label>Rating</label><p>{selectedPlace.rating > 0 ? `${selectedPlace.rating.toFixed(1)} / 5.0` : 'No ratings yet'}</p></div>
-              <div className="place-modal-info-item"><label>Owner</label><p>{selectedPlace.ownerName}</p></div>
-              {selectedPlace.ownerPhone && <div className="place-modal-info-item"><label>Contact</label><p>{selectedPlace.ownerPhone}</p></div>}
-              {selectedPlace.distance != null && <div className="place-modal-info-item"><label>Distance to University</label><p>{selectedPlace.distance.toFixed(2)} km</p></div>}
+              <div className="place-modal-info-item">
+                <label>Monthly Rent</label>
+                <p>LKR {selectedPlace.price?.toLocaleString()}</p>
+              </div>
+              <div className="place-modal-info-item">
+                <label>Available Rooms</label>
+                <p>{selectedPlace.availableRooms} / {selectedPlace.totalRooms}</p>
+              </div>
+              <div className="place-modal-info-item">
+                <label>Rating</label>
+                <p>{selectedPlace.rating > 0 ? `${selectedPlace.rating.toFixed(1)} / 5.0` : 'No ratings yet'}</p>
+              </div>
+              <div className="place-modal-info-item">
+                <label>Owner</label>
+                <p>{selectedPlace.ownerName}</p>
+              </div>
+              {selectedPlace.ownerPhone && (
+                <div className="place-modal-info-item">
+                  <label>Contact</label>
+                  <p>{selectedPlace.ownerPhone}</p>
+                </div>
+              )}
+              {selectedPlace.distance != null && (
+                <div className="place-modal-info-item">
+                  <label>Distance to University</label>
+                  <p>{selectedPlace.distance.toFixed(2)} km</p>
+                </div>
+              )}
+              {selectedPlace.nearestUniversityName && (
+                <div className="place-modal-info-item full">
+                  <label>Nearest University</label>
+                  <p><HiOutlineAcademicCap size={14} /> {selectedPlace.nearestUniversityName} ({selectedPlace.distanceToUniversity} km)</p>
+                </div>
+              )}
             </div>
 
             {selectedPlace.facilities && (
-              <div style={{marginBottom: 20}}><label style={{fontSize: 12, color:'var(--text-muted)', textTransform:'uppercase', fontWeight: 600}}>Facilities</label>
-                <div style={{display:'flex', gap: 6, flexWrap:'wrap', marginTop: 6}}>{selectedPlace.facilities.split(',').map((f,i) => <span key={i} className="badge badge-neutral">{f.trim()}</span>)}</div>
+              <div className="place-modal-facilities">
+                <label>Facilities</label>
+                <div className="facilities-list">
+                  {selectedPlace.facilities.split(',').map((f, i) => (
+                    <span key={i} className="badge badge-neutral">{f.trim()}</span>
+                  ))}
+                </div>
               </div>
             )}
 
-            {selectedPlace.description && <p style={{fontSize: 14, color:'var(--text-secondary)', lineHeight: 1.7, marginBottom: 24}}>{selectedPlace.description}</p>}
+            {selectedPlace.description && (
+              <p className="place-modal-desc">{selectedPlace.description}</p>
+            )}
 
             {user?.userType === 'STUDENT' && (
-              <button className="btn btn-primary btn-lg" style={{width:'100%'}} onClick={() => { handleBook(selectedPlace.id); setSelectedPlace(null); }}>Request Booking</button>
+              <button className="btn btn-primary btn-lg place-modal-book" onClick={() => { handleBook(selectedPlace.id); setSelectedPlace(null); }}>
+                Request Booking
+              </button>
             )}
           </div>
         </div>

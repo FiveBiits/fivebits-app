@@ -1,13 +1,23 @@
 package com.fivebits.fivebits_backend.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fivebits.fivebits_backend.dto.BoardingPlaceRequest;
 import com.fivebits.fivebits_backend.dto.BoardingPlaceResponse;
 import com.fivebits.fivebits_backend.service.BoardingPlaceService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/places")
@@ -62,8 +72,11 @@ public class BoardingPlaceController {
     @GetMapping("/search")
     public List<BoardingPlaceResponse> searchPlaces(
             @RequestParam(required = false) String location,
-            @RequestParam(required = false) Double maxPrice) {
-        return placeService.searchPlaces(location, maxPrice);
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Long universityId,
+            @RequestParam(required = false) Double maxDistance,
+            @RequestParam(required = false) Integer minRooms) {
+        return placeService.searchPlaces(location, maxPrice, universityId, maxDistance, minRooms);
     }
 
     @GetMapping("/recommendations")
@@ -71,8 +84,10 @@ public class BoardingPlaceController {
             @RequestParam double lat,
             @RequestParam double lng,
             @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Double maxDistance,
+            @RequestParam(required = false) Integer minRooms,
             @RequestParam(defaultValue = "5") int limit) {
-        return placeService.getRecommendations(lat, lng, maxPrice, limit);
+        return placeService.getRecommendations(lat, lng, maxPrice, maxDistance, minRooms, limit);
     }
 
     @PatchMapping("/{id}/verify")

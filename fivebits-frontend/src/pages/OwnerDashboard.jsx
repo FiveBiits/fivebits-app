@@ -6,6 +6,7 @@ import { getOwnerBookings, confirmBooking, cancelBooking } from '../services/boo
 import { getOwnerPayments } from '../services/paymentService';
 import { getOwnerIssues, resolveIssue } from '../services/issueService';
 import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus } from 'react-icons/hi2';
+import MapPicker from '../components/MapPicker';
 import '../styles/dashboard.css';
 
 export default function OwnerDashboard() {
@@ -17,7 +18,7 @@ export default function OwnerDashboard() {
   const [payments, setPayments] = useState([]);
   const [issues, setIssues] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [placeForm, setPlaceForm] = useState({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', imageUrl:'' });
+  const [placeForm, setPlaceForm] = useState({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', imageUrl:'', latitude: 0, longitude: 0 });
   const [resolveReply, setResolveReply] = useState({});
   const [msg, setMsg] = useState('');
 
@@ -40,7 +41,7 @@ export default function OwnerDashboard() {
       await createPlace(user.id, { ...placeForm, price: parseFloat(placeForm.price), totalRooms: parseInt(placeForm.totalRooms), availableRooms: parseInt(placeForm.availableRooms) });
       flash('Boarding place added successfully');
       setShowAddForm(false);
-      setPlaceForm({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', imageUrl:'' });
+      setPlaceForm({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', imageUrl:'', latitude: 0, longitude: 0 });
       load();
     } catch (err) { flash(err.response?.data || 'Failed to add place'); }
   };
@@ -133,6 +134,11 @@ export default function OwnerDashboard() {
               <div className="form-group"><label>Facilities (comma separated)</label><input value={placeForm.facilities} onChange={pf('facilities')} placeholder="WiFi, AC, Kitchen" /></div>
               <div className="form-group full"><label>Description</label><input value={placeForm.description} onChange={pf('description')} /></div>
               <div className="form-group full"><label>Image URL</label><input value={placeForm.imageUrl} onChange={pf('imageUrl')} /></div>
+              <MapPicker
+                latitude={placeForm.latitude}
+                longitude={placeForm.longitude}
+                onChange={({latitude, longitude}) => setPlaceForm({...placeForm, latitude, longitude})}
+              />
               <button type="submit" className="btn btn-primary" style={{gridColumn:'1/-1'}}>Add Boarding Place</button>
             </form>
           )}

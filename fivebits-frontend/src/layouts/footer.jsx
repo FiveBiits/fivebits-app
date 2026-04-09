@@ -34,7 +34,7 @@ export default function Footer() {
       </div>
       <div className="footer-bottom">
         <img src={logo} alt="" className="footer-bottom-icon" />
-        <span>&copy; {new Date().getFullYear()} FiveBits. All rights reserved. Built by Team FiveBits.</span>
+        <span>&copy; {new Date().getFullYear()} FiveBits. ALL RIGHTS RESERVED.</span>
         <img src={logo} alt="" className="footer-bottom-icon" />
       </div>
     </footer>

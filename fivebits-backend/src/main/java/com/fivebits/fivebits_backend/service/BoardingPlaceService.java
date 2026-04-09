@@ -1,17 +1,21 @@
 package com.fivebits.fivebits_backend.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.fivebits.fivebits_backend.dto.BoardingPlaceRequest;
 import com.fivebits.fivebits_backend.dto.BoardingPlaceResponse;
 import com.fivebits.fivebits_backend.model.BoardingOwner;
 import com.fivebits.fivebits_backend.model.BoardingPlace;
+import com.fivebits.fivebits_backend.model.University;
 import com.fivebits.fivebits_backend.repository.BoardingOwnerRepository;
 import com.fivebits.fivebits_backend.repository.BoardingPlaceRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.fivebits.fivebits_backend.repository.UniversityRepository;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ public class BoardingPlaceService {
 
     private final BoardingPlaceRepository placeRepository;
     private final BoardingOwnerRepository ownerRepository;
+    private final UniversityRepository universityRepository;
 
     @Transactional
     public BoardingPlaceResponse createPlace(Long ownerId, BoardingPlaceRequest request) {
@@ -82,17 +87,53 @@ public class BoardingPlaceService {
                 .collect(Collectors.toList());
     }
 
-    public List<BoardingPlaceResponse> searchPlaces(String location, Double maxPrice) {
-        return placeRepository.searchPlaces(location, maxPrice).stream()
-                .map(p -> toResponse(p, null, null))
+    public List<BoardingPlaceResponse> searchPlaces(String location, Double maxPrice,
+            Long universityId, Double maxDistance, Integer minRooms) {
+        // Start with the base query
+        List<BoardingPlace> results = placeRepository.searchPlaces(location, maxPrice);
+
+        // If a university is selected, calculate distance and filter
+        University selectedUni = null;
+        if (universityId != null) {
+            selectedUni = universityRepository.findById(universityId).orElse(null);
+        }
+
+        final University uni = selectedUni;
+
+        return results.stream()
+                .filter(p -> {
+                    if (minRooms != null && p.getAvailableRooms() < minRooms) return false;
+                    if (uni != null && maxDistance != null && p.getLatitude() != 0 && p.getLongitude() != 0) {
+                        double dist = p.calculateDistance(uni.getLatitude(), uni.getLongitude());
+                        if (dist > maxDistance) return false;
+                    }
+                    return true;
+                })
+                .map(p -> {
+                    Double dist = null;
+                    if (uni != null && p.getLatitude() != 0 && p.getLongitude() != 0) {
+                        dist = Math.round(p.calculateDistance(uni.getLatitude(), uni.getLongitude()) * 100.0) / 100.0;
+                    }
+                    return toResponse(p, dist, null);
+                })
                 .collect(Collectors.toList());
     }
 
-    public List<BoardingPlaceResponse> getRecommendations(double lat, double lng, Double maxPrice, int limit) {
+    public List<BoardingPlaceResponse> getRecommendations(double lat, double lng, Double maxPrice,
+            Double maxDistance, Integer minRooms, int limit) {
         double effectiveMaxPrice = (maxPrice != null) ? maxPrice : 50000;
         List<BoardingPlace> all = placeRepository.findByAvailableRoomsGreaterThan(0);
 
         return all.stream()
+                .filter(p -> {
+                    if (minRooms != null && p.getAvailableRooms() < minRooms) return false;
+                    if (maxDistance != null && p.getLatitude() != 0 && p.getLongitude() != 0) {
+                        double dist = p.calculateDistance(lat, lng);
+                        if (dist > maxDistance) return false;
+                    }
+                    if (maxPrice != null && p.getPrice() > maxPrice) return false;
+                    return true;
+                })
                 .map(p -> {
                     double distance = p.calculateDistance(lat, lng);
                     double rankScore = p.calculateRankScore(lat, lng, effectiveMaxPrice);
@@ -138,6 +179,25 @@ public class BoardingPlaceService {
         resp.setCreatedAt(place.getCreatedAt());
         resp.setDistance(distance);
         resp.setRankScore(rankScore);
+
+        // Calculate nearest university
+        if (place.getLatitude() != 0 && place.getLongitude() != 0) {
+            List<University> universities = universityRepository.findAll();
+            String nearestName = null;
+            double nearestDist = Double.MAX_VALUE;
+            for (University uni : universities) {
+                double d = place.calculateDistance(uni.getLatitude(), uni.getLongitude());
+                if (d < nearestDist) {
+                    nearestDist = d;
+                    nearestName = uni.getName();
+                }
+            }
+            if (nearestName != null) {
+                resp.setNearestUniversityName(nearestName);
+                resp.setDistanceToUniversity(Math.round(nearestDist * 100.0) / 100.0);
+            }
+        }
+
         return resp;
     }
 }
