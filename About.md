@@ -1,53 +1,62 @@
-# 🏠 FiveBits — Online Boarding Place Discovery and Management System
+# About FiveBits
 
----
+## The Problem
 
-## 📌 Project Introduction
+Finding suitable boarding accommodation is one of the biggest challenges faced by Sri Lankan university students, especially those new to an area. Students currently rely on word-of-mouth, social media posts, and notice boards — methods that are time-consuming, unorganized, and often unreliable.
 
-Accommodation plays an important role in a university student's academic life and overall well-being. However, finding a suitable boarding place is still a major challenge for many students, especially those who are new to the area.
+Even after securing a place, common pain points persist: unclear utility payments, unresolved maintenance issues, and lack of communication channels with owners. On the other side, boarding owners manage listings, bookings, and payments manually, leading to inefficiency and errors.
 
-Currently, students mainly depend on informal methods such as word-of-mouth recommendations, social media posts, notice boards, or visiting boarding places in person. These methods are time-consuming, unorganized, and often provide limited or unreliable information, making it difficult for students to make informed decisions.
+## Our Solution
 
-Even after finding a boarding place, students often face problems such as maintenance issues, unclear utility payments, and difficulties in managing shared expenses. Boarding place owners also face challenges, as they usually manage listings, communication, and payments manually, which can lead to inefficiency and errors.
+**FiveBits** is a centralized web platform that connects university students with boarding place owners. It streamlines the entire boarding lifecycle — from discovery and booking to payments and issue resolution.
 
-To overcome these problems, this project proposes a **centralized software application** that helps students easily find, select, and manage boarding places while also supporting boarding place owners in handling their tasks efficiently.
+### What We Offer
 
----
+**For Students**
+- Search and filter boarding places by university proximity, price, and facilities
+- View locations on an interactive map with distance calculations to campus
+- Book places online and track booking status in real time
+- Pay boarding fees and utility bills through the platform
+- Report maintenance issues and follow up on resolutions
 
-## 🎯 Objectives
+**For Boarding Owners**
+- List and manage properties with photos, pricing, and facility details
+- Accept or decline booking requests from a centralized dashboard
+- Track revenue and payment history
+- Receive and resolve tenant issue reports
 
-- Help students easily find boarding places near university entrances
-- Provide a centralized system for paying boarding fees and utility bills
-- Reduce manual work for boarding owners
-- Display nearby food store locations for students
-- Automatically rank the top 5 boarding places based on student preferences
-- Display distances from boarding places to the university
+### Top 5 Recommendations
 
----
+The system automatically ranks and recommends the top boarding places based on student-selected preferences, making it easier to make informed decisions quickly.
 
-## 📦 Deliverables
+## Project Objectives
 
-- Web-based boarding management system
-- Boarding place search functionality with automatic top 5 recommendations
-- Distance calculation from boarding place to university
-- Online payment and bill management module
-- Nearby food store information
-- User-friendly interface for students and boarding owners
+1. Help students easily discover boarding places near their university
+2. Provide a centralized platform for booking, payments, and bill management
+3. Reduce manual administrative work for boarding owners
+4. Calculate and display distances from boarding places to universities
+5. Automatically recommend top boarding places based on student preferences
+6. Deliver a user-friendly experience for both students and owners
 
----
-
-## 👥 Stakeholders
+## Stakeholders
 
 | Stakeholder | Role |
 |---|---|
-| **Students** | Search boarding places, view top recommendations, calculate distances, pay fees and bills |
-| **Boarding Owners** | Register boarding places, manage payments |
-| **University Administration** | Indirect benefit through organized student accommodation *(optional)* |
-| **System Administrator** | Manages system, users, and data |
+| **Students** | Search, book, pay, and report issues |
+| **Boarding Owners** | List properties, manage bookings and payments, resolve issues |
+| **University Administration** | Indirect benefit from organized student accommodation |
 
----
+## Tech Stack
 
-## 👨‍💻 Team — FiveBits
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, React Router, Leaflet Maps |
+| Backend | Spring Boot 4, Spring Security, Spring Data JPA |
+| Database | PostgreSQL 16 |
+| Auth | JWT with role-based access control |
+| Deployment | Docker Compose |
+
+## Team — FiveBits
 
 | Index No | Name |
 |---|---|
@@ -57,11 +66,8 @@ To overcome these problems, this project proposes a **centralized software appli
 | 240721C | Wijenayake W.M.P.S. |
 | 240005K | Abegunawardhana A.D. |
 
----
-
 ## Project Info
 
-STARTED ON 2026
-PROJECT FOR SEMESTER 2 CS1040 MODULE
-UNIVERSITY OF MORATUWA
-SRI LANKA
+- **Started:** 2026
+- **Module:** CS1040 — Semester 2
+- **University:** University of Moratuwa, Sri Lanka
