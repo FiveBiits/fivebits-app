@@ -38,6 +38,13 @@ public class BookingService {
             throw new RuntimeException("No rooms available at this boarding place");
         }
 
+        boolean alreadyBooked = bookingRepository.existsByStudentIdAndPlaceIdAndStatusIn(
+                request.getStudentId(), request.getPlaceId(),
+                List.of("REQUESTED", "CONFIRMED", "ACTIVE"));
+        if (alreadyBooked) {
+            throw new RuntimeException("You already have an active booking for this boarding place");
+        }
+
         Booking booking = new Booking();
         booking.setStudent(student);
         booking.setPlace(place);

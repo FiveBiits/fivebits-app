@@ -163,6 +163,7 @@ export default function Browse() {
       setTimeout(() => setBookingMsg(''), 3000);
     } catch (err) {
       setBookingMsg(err.response?.data || 'Failed to book');
+      setTimeout(() => setBookingMsg(''), 4000);
     }
   };
 
@@ -389,7 +390,7 @@ export default function Browse() {
             )}
 
             {user?.userType === 'STUDENT' && (
-              <button className="btn btn-primary btn-lg place-modal-book" onClick={() => { handleBook(selectedPlace.id); setSelectedPlace(null); }}>
+              <button className="btn btn-primary btn-lg place-modal-book" onClick={async () => { await handleBook(selectedPlace.id); setSelectedPlace(null); }}>
                 <HiOutlineBookOpen /> <span className="btn-label">Request Booking</span>
               </button>
             )}
