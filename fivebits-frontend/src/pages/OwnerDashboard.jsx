@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getOwnerStats } from '../services/dashboardService';
-import { getOwnerPlaces, createPlace, deletePlace, uploadPlaceImages } from '../services/placeService';
+import { getOwnerPlaces, createPlace, updatePlace, deletePlace, uploadPlaceImages, deletePlaceImage, setMainPlaceImage } from '../services/placeService';
 import { getOwnerBookings, confirmBooking, cancelBooking } from '../services/bookingService';
 import { getOwnerPayments } from '../services/paymentService';
 import { getOwnerIssues, resolveIssue } from '../services/issueService';
-import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus, HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineWrenchScrewdriver, HiOutlinePhoto, HiOutlineStar } from 'react-icons/hi2';
+import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus, HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineWrenchScrewdriver, HiOutlinePhoto, HiOutlineStar, HiOutlinePencilSquare } from 'react-icons/hi2';
 import MapPicker from '../components/MapPicker';
 import '../styles/dashboard.css';
 
@@ -21,6 +21,9 @@ export default function OwnerDashboard() {
   const [placeForm, setPlaceForm] = useState({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', latitude: 0, longitude: 0 });
   const [imageFiles, setImageFiles] = useState([]);
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [editingPlace, setEditingPlace] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editNewImages, setEditNewImages] = useState([]);
   const [resolveReply, setResolveReply] = useState({});
   const [msg, setMsg] = useState('');
 
@@ -58,6 +61,68 @@ export default function OwnerDashboard() {
     try { await deletePlace(id); flash('Place deleted'); load(); } catch (err) { flash('Failed to delete'); }
   };
 
+  const startEditing = (listing) => {
+    setEditingPlace(listing.id);
+    setEditForm({
+      name: listing.name || '', location: listing.location || '', address: listing.address || '',
+      description: listing.description || '', price: listing.price || '', totalRooms: listing.totalRooms || '',
+      availableRooms: listing.availableRooms || '', facilities: listing.facilities || '',
+      latitude: listing.latitude || 0, longitude: listing.longitude || 0
+    });
+    setEditNewImages([]);
+    setShowAddForm(false);
+  };
+
+  const cancelEditing = () => { setEditingPlace(null); setEditForm({}); setEditNewImages([]); };
+
+  const handleEditPlace = async (e) => {
+    e.preventDefault();
+    try {
+      await updatePlace(editingPlace, {
+        ...editForm,
+        price: parseFloat(editForm.price),
+        totalRooms: parseInt(editForm.totalRooms),
+        availableRooms: parseInt(editForm.availableRooms)
+      });
+      if (editNewImages.length > 0) {
+        await uploadPlaceImages(editingPlace, editNewImages, -1);
+      }
+      flash('Place updated successfully');
+      cancelEditing();
+      load();
+    } catch (err) { flash(err.response?.data || 'Failed to update place'); }
+  };
+
+  const handleDeleteImage = async (imageId) => {
+    try {
+      await deletePlaceImage(imageId);
+      load();
+    } catch (err) { flash('Failed to delete image'); }
+  };
+
+  const handleSetMainImage = async (imageId) => {
+    try {
+      await setMainPlaceImage(imageId);
+      load();
+    } catch (err) { flash('Failed to set main image'); }
+  };
+
+  const handleEditImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 6 * 1024 * 1024;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    const valid = files.filter(f => f.size <= maxSize && allowed.includes(f.type));
+    const currentListing = listings.find(l => l.id === editingPlace);
+    const existingCount = (currentListing?.images?.length || 0) + editNewImages.length;
+    const remaining = 6 - existingCount;
+    const toAdd = valid.slice(0, remaining);
+    if (toAdd.length < files.length) {
+      flash('Some files were skipped (max 6MB, JPG/PNG/WebP only, max 6 total)');
+    }
+    setEditNewImages(prev => [...prev, ...toAdd]);
+    e.target.value = '';
+  };
+
   const handleConfirm = async (id) => {
     try { await confirmBooking(id); load(); flash('Booking confirmed'); } catch (err) { flash('Action failed'); }
   };
@@ -76,6 +141,7 @@ export default function OwnerDashboard() {
   };
 
   const pf = (f) => (e) => setPlaceForm({...placeForm, [f]: e.target.value});
+  const ef = (f) => (e) => setEditForm({...editForm, [f]: e.target.value});
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -103,7 +169,7 @@ export default function OwnerDashboard() {
         <div><h1>Owner Dashboard</h1><p>Manage your boarding places, bookings, and more</p></div>
       </div>
 
-      {msg && <div className="auth-error" style={{marginBottom: 16, background: msg.includes('success') || msg.includes('confirmed') || msg.includes('resolved') || msg.includes('deleted') ? '#d1fae5' : undefined, color: msg.includes('success') || msg.includes('confirmed') || msg.includes('resolved') || msg.includes('deleted') ? '#065f46' : undefined}}>{msg}</div>}
+      {msg && <div className="auth-error" style={{marginBottom: 16, background: msg.includes('success') || msg.includes('confirmed') || msg.includes('resolved') || msg.includes('deleted') || msg.includes('updated') ? '#d1fae5' : undefined, color: msg.includes('success') || msg.includes('confirmed') || msg.includes('resolved') || msg.includes('deleted') || msg.includes('updated') ? '#065f46' : undefined}}>{msg}</div>}
 
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-icon blue"><HiOutlineBuildingOffice /></div><div><div className="stat-value">{stats.activeListings || 0}</div><div className="stat-label">Active Listings</div></div></div>
@@ -201,14 +267,80 @@ export default function OwnerDashboard() {
             <div className="dash-empty"><h3>No listings yet</h3><p>Add your first boarding place to get started</p></div>
           ) : (
             listings.map(l => (
-              <div className="listing-card" key={l.id}>
-                <div className="listing-info">
-                  <h4>{l.name} {l.verified && <span className="badge badge-success">Verified</span>}</h4>
-                  <p>{l.location} — LKR {l.price?.toLocaleString()}/mo — {l.availableRooms}/{l.totalRooms} rooms available</p>
+              <div className="listing-card-wrapper" key={l.id}>
+                <div className="listing-card">
+                  <div className="listing-info">
+                    <h4>{l.name} {l.verified && <span className="badge badge-success">Verified</span>}</h4>
+                    <p>{l.location} — LKR {l.price?.toLocaleString()}/mo — {l.availableRooms}/{l.totalRooms} rooms available</p>
+                  </div>
+                  <div className="listing-actions">
+                    <button className="btn btn-outline btn-sm" onClick={() => editingPlace === l.id ? cancelEditing() : startEditing(l)}><HiOutlinePencilSquare /> <span className="btn-label">{editingPlace === l.id ? 'Cancel' : 'Edit'}</span></button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDeletePlace(l.id)}><HiOutlineTrash /> <span className="btn-label">Delete</span></button>
+                  </div>
                 </div>
-                <div className="listing-actions">
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDeletePlace(l.id)}><HiOutlineTrash /> <span className="btn-label">Delete</span></button>
-                </div>
+
+                {editingPlace === l.id && (
+                  <form className="add-listing-form edit-listing-form" onSubmit={handleEditPlace} style={{margin: '0 0 12px', padding: 20, border: '1px solid var(--primary)', borderRadius: 'var(--radius-lg)', background: 'var(--bg-secondary)'}}>
+                    <div className="form-group"><label>Name</label><input required value={editForm.name} onChange={ef('name')} /></div>
+                    <div className="form-group"><label>Location</label><input required value={editForm.location} onChange={ef('location')} /></div>
+                    <div className="form-group full"><label>Address</label><input value={editForm.address} onChange={ef('address')} /></div>
+                    <div className="form-group"><label>Monthly Price (LKR)</label><input type="number" required value={editForm.price} onChange={ef('price')} /></div>
+                    <div className="form-group"><label>Total Rooms</label><input type="number" required value={editForm.totalRooms} onChange={ef('totalRooms')} /></div>
+                    <div className="form-group"><label>Available Rooms</label><input type="number" required value={editForm.availableRooms} onChange={ef('availableRooms')} /></div>
+                    <div className="form-group"><label>Facilities (comma separated)</label><input value={editForm.facilities} onChange={ef('facilities')} placeholder="WiFi, AC, Kitchen" /></div>
+                    <div className="form-group full"><label>Description</label><input value={editForm.description} onChange={ef('description')} /></div>
+
+                    <div className="form-group full">
+                      <label>Photos ({(l.images?.length || 0) + editNewImages.length}/6)</label>
+                      <div className="image-upload-area">
+                        {l.images && l.images.length > 0 && (
+                          <div className="image-preview-grid">
+                            {l.images.map(img => (
+                              <div className={`image-preview-item ${img.main ? 'is-main' : ''}`} key={img.id}>
+                                <img src={img.url} alt="Place" />
+                                <div className="image-preview-actions">
+                                  <button type="button" className={`image-star ${img.main ? 'active' : ''}`} onClick={() => handleSetMainImage(img.id)} title="Set as main"><HiOutlineStar size={14} /></button>
+                                  <button type="button" className="image-remove" onClick={() => handleDeleteImage(img.id)} title="Remove"><HiOutlineXMark size={14} /></button>
+                                </div>
+                                {img.main && <span className="image-main-badge">Main</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {editNewImages.length > 0 && (
+                          <div className="image-preview-grid" style={{marginTop: l.images?.length ? 10 : 0}}>
+                            {editNewImages.map((file, i) => (
+                              <div className="image-preview-item" key={`new-${i}`}>
+                                <img src={URL.createObjectURL(file)} alt={file.name} />
+                                <div className="image-preview-actions">
+                                  <button type="button" className="image-remove" onClick={() => setEditNewImages(prev => prev.filter((_, idx) => idx !== i))} title="Remove"><HiOutlineXMark size={14} /></button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {(l.images?.length || 0) + editNewImages.length < 6 && (
+                          <label className="image-upload-trigger" style={{marginTop: 10}}>
+                            <HiOutlinePhoto size={24} />
+                            <span>Add more photos</span>
+                            <span className="image-upload-hint">JPG, PNG, WebP — max 6 MB each</span>
+                            <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleEditImageSelect} style={{display:'none'}} />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    <MapPicker
+                      latitude={editForm.latitude}
+                      longitude={editForm.longitude}
+                      onChange={({latitude, longitude}) => setEditForm({...editForm, latitude, longitude})}
+                    />
+                    <div style={{gridColumn:'1/-1', display:'flex', gap: 10}}>
+                      <button type="submit" className="btn btn-primary"><HiOutlineCheck /> <span className="btn-label">Save Changes</span></button>
+                      <button type="button" className="btn btn-outline" onClick={cancelEditing}><HiOutlineXMark /> <span className="btn-label">Cancel</span></button>
+                    </div>
+                  </form>
+                )}
               </div>
             ))
           )}
