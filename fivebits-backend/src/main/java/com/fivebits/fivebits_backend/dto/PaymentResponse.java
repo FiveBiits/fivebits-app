@@ -23,4 +23,9 @@ public class PaymentResponse {
     private String transactionRef;
     private LocalDateTime createdAt;
     private LocalDateTime paidAt;
+    private String hash;
+    private String merchantId;
+    
+    // STOP HERE. Do not add manual getters or setters.
+    // Lombok's @Data handles them automatically in the background.
 }

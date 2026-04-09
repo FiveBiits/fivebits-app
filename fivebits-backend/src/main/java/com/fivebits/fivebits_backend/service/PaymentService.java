@@ -1,9 +1,13 @@
 package com.fivebits.fivebits_backend.service;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +34,13 @@ public class PaymentService {
     private final BookingRepository bookingRepository;
     private final NotificationService notificationService;
 
+    // These values pull from your .env file
+    @Value("${PAYHERE_MERCHANT_ID}")
+    private String merchantId;
+
+    @Value("${PAYHERE_SECRET}")
+    private String merchantSecret;
+
     @Transactional
     public PaymentResponse createPayment(PaymentRequest request) {
         Student student = studentRepository.findById(request.getStudentId())
@@ -53,9 +64,22 @@ public class PaymentService {
             payment.setBooking(booking);
         }
 
-        payment.setTransactionRef("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        // Generate a unique reference
+        String txnRef = "TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        payment.setTransactionRef(txnRef);
 
-        return toResponse(paymentRepository.save(payment));
+        // Save the pending payment
+        Payment savedPayment = paymentRepository.save(payment);
+
+        // Calculate the PayHere Hash
+        String hash = generatePayHereHash(txnRef, request.getAmount());
+
+        // Map to response and include the hash for the frontend
+        PaymentResponse response = toResponse(savedPayment);
+        response.setHash(hash);
+        response.setMerchantId(merchantId);
+        
+        return response;
     }
 
     @Transactional
@@ -63,9 +87,9 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
-        payment.processPayment();
-        payment.markSuccessful();
-        payment.generateReceipt();
+        // Logic for marking successful (called by the Notify endpoint later)
+        payment.setStatus("SUCCESS"); 
+        payment.setPaidAt(java.time.LocalDateTime.now());
 
         if (payment.getPlace() != null) {
             notificationService.createNotification(
@@ -77,6 +101,37 @@ public class PaymentService {
 
         return toResponse(paymentRepository.save(payment));
     }
+
+    // --- HELPER METHODS FOR PAYHERE ---
+
+    private String generatePayHereHash(String orderId, double amount) {
+        // PayHere Hash Formula: MerchantID + OrderID + Amount + Currency + MD5(MerchantSecret)
+        String currency = "LKR";
+        String merchantSecretHash = md5(merchantSecret).toUpperCase();
+        
+        // Formatted amount (PayHere likes decimals or standard string representation)
+        String amountString = String.format("%.2f", amount); 
+        
+        String source = merchantId + orderId + amountString + currency + merchantSecretHash;
+        return md5(source).toUpperCase();
+    }
+
+    private String md5(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] messageDigest = md.digest(input.getBytes());
+            BigInteger no = new BigInteger(1, messageDigest);
+            String hashtext = no.toString(16);
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+            return hashtext;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("MD5 algorithm not found", e);
+        }
+    }
+
+    // --- MAPPING METHODS ---
 
     public List<PaymentResponse> getStudentPayments(Long studentId) {
         return paymentRepository.findByStudentId(studentId).stream()
