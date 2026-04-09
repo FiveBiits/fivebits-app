@@ -5,6 +5,7 @@ import { getAllUniversities } from '../services/universityService';
 import { createBooking } from '../services/bookingService';
 import { HiOutlineLocationMarker, HiOutlineStar, HiOutlineHome, HiOutlineAcademicCap } from 'react-icons/hi';
 import { HiXMark, HiOutlineAdjustmentsHorizontal, HiOutlineBuildingOffice, HiOutlineMapPin } from 'react-icons/hi2';
+import LocationMap from '../components/LocationMap';
 import '../styles/browse.css';
 
 export default function Browse() {
@@ -319,6 +320,8 @@ export default function Browse() {
                 </div>
               )}
             </div>
+
+            <LocationMap latitude={selectedPlace.latitude} longitude={selectedPlace.longitude} />
 
             {selectedPlace.facilities && (
               <div className="place-modal-facilities">
