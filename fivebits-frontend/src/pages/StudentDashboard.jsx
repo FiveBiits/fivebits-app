@@ -4,7 +4,8 @@ import { getStudentStats } from '../services/dashboardService';
 import { getStudentBookings, cancelBooking } from '../services/bookingService';
 import { getStudentPayments } from '../services/paymentService';
 import { getStudentIssues, submitIssue } from '../services/issueService';
-import { HiOutlineHome, HiOutlineCurrencyDollar, HiOutlineExclamationCircle, HiOutlineClipboardDocumentList, HiOutlineXMark, HiOutlinePaperAirplane } from 'react-icons/hi2';
+import { HiOutlineHome, HiOutlineCurrencyDollar, HiOutlineExclamationCircle, HiOutlineClipboardDocumentList, HiOutlineXMark, HiOutlinePaperAirplane, HiOutlineCreditCard } from 'react-icons/hi2';
+import axios from 'axios'; // Ensure axios is imported
 import '../styles/dashboard.css';
 
 export default function StudentDashboard() {
@@ -25,6 +26,55 @@ export default function StudentDashboard() {
       getStudentIssues(user.id).then(r => setIssues(r.data)).catch(() => {});
     }
   }, [user]);
+
+  // --- NEW PAYMENT LOGIC ---
+  const handlePayment = async (booking) => {
+    try {
+      const paymentRequest = {
+        studentId: user.id,
+        placeId: booking.placeId,
+        bookingId: booking.id,
+        amount: booking.placePrice,
+        method: "PAYHERE",
+        type: "BOARDING_FEE"
+      };
+
+      // Call your Spring Boot backend
+      const response = await axios.post('http://localhost:8080/api/payments/create', paymentRequest);
+      const data = response.data;
+
+      const paymentConfig = {
+        "sandbox": true,
+        "merchant_id": data.merchantId,
+        "return_url": "http://localhost:3000/payment-success",
+        "cancel_url": "http://localhost:3000/student/dashboard",
+        "notify_url": "http://localhost:8080/api/payments/notify",
+        "order_id": data.transactionRef,
+        "items": `Booking for ${booking.placeName}`,
+        "amount": data.amount,
+        "currency": "LKR",
+        "hash": data.hash,
+        "first_name": user.name,
+        "last_name": "",
+        "email": user.email || "test@example.com",
+        "phone": "0771234567",
+        "address": "Colombo",
+        "city": "Colombo",
+        "country": "Sri Lanka",
+      };
+
+      window.payhere.onCompleted = function onCompleted(orderId) {
+        window.location.href = "/payment-success";
+      };
+
+      window.payhere.startPayment(paymentConfig);
+
+    } catch (err) {
+      console.error("Payment initiation failed", err);
+      setMsg("Failed to start payment process.");
+    }
+  };
+  // -------------------------
 
   const handleCancelBooking = async (id) => {
     try {
@@ -107,7 +157,20 @@ export default function StudentDashboard() {
                     <td>{b.startDate}</td>
                     <td>{b.endDate || '—'}</td>
                     <td>{statusBadge(b.status)}</td>
-                    <td>{(b.status === 'REQUESTED' || b.status === 'CONFIRMED') && <button className="btn btn-danger btn-sm" onClick={() => handleCancelBooking(b.id)}><HiOutlineXMark /> <span className="btn-label">Cancel</span></button>}</td>
+                    <td style={{ display: 'flex', gap: '8px' }}>
+                      {/* PAY NOW BUTTON */}
+                      {b.status === 'CONFIRMED' && (
+                        <button className="btn btn-primary btn-sm" onClick={() => handlePayment(b)}>
+                          <HiOutlineCreditCard /> <span className="btn-label">Pay Now</span>
+                        </button>
+                      )}
+                      
+                      {(b.status === 'REQUESTED' || b.status === 'CONFIRMED') && (
+                        <button className="btn btn-danger btn-sm" onClick={() => handleCancelBooking(b.id)}>
+                          <HiOutlineXMark /> <span className="btn-label">Cancel</span>
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
