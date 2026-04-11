@@ -16,6 +16,9 @@ import OwnerDashboard from './pages/OwnerDashboard';
 import Browse from './pages/browse';
 import PrivateRoute from './components/PrivateRoute';
 
+// Import your new payment pages
+import PaymentSuccess from './pages/PaymentSuccess';
+
 const pageTitles = {
   '/':                  'FiveBits | An Online Boarding Place Discovery and Management System',
   '/about':             'About | FiveBits',
@@ -26,6 +29,7 @@ const pageTitles = {
   '/browse':            'Browse Boarding Places | FiveBits',
   '/student/dashboard': 'Dashboard | FiveBits',
   '/owner/dashboard':   'Dashboard | FiveBits',
+  '/payment-success':   'Payment Successful | FiveBits', // Added this
 };
 
 // Navbar is now shown on dashboard routes too
@@ -53,6 +57,10 @@ function AppContent() {
         <Route path="/signin"  element={<SignIn />} />
         <Route path="/signup"  element={<SignUp />} />
         <Route path="/browse"  element={<Browse />} />
+        
+        {/* Payment Routes */}
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+
         <Route path="/student/dashboard" element={
           <PrivateRoute role="STUDENT"><StudentDashboard /></PrivateRoute>
         } />
