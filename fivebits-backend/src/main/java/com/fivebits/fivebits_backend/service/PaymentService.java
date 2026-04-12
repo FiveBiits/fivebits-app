@@ -35,10 +35,10 @@ public class PaymentService {
     private final NotificationService notificationService;
 
     // These values pull from your .env file
-    @Value("${PAYHERE_MERCHANT_ID}")
+    @Value("${PAYHERE_MERCHANT_ID:}")
     private String merchantId;
 
-    @Value("${PAYHERE_SECRET}")
+    @Value("${PAYHERE_SECRET:}")
     private String merchantSecret;
 
     @Transactional

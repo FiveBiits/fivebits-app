@@ -4,8 +4,15 @@ import { getStudentStats } from '../services/dashboardService';
 import { getStudentBookings, cancelBooking } from '../services/bookingService';
 import { getStudentPayments } from '../services/paymentService';
 import { getStudentIssues, submitIssue } from '../services/issueService';
-import { HiOutlineHome, HiOutlineCurrencyDollar, HiOutlineExclamationCircle, HiOutlineClipboardDocumentList, HiOutlineXMark, HiOutlinePaperAirplane, HiOutlineCreditCard } from 'react-icons/hi2';
-import axios from 'axios'; // Ensure axios is imported
+import { 
+  HiOutlineHome, 
+  HiOutlineCurrencyDollar, 
+  HiOutlineExclamationCircle, 
+  HiOutlineClipboardDocumentList, 
+  HiOutlineXMark, 
+  HiOutlineCreditCard 
+} from 'react-icons/hi2';
+import axios from 'axios'; 
 import '../styles/dashboard.css';
 
 export default function StudentDashboard() {
@@ -27,11 +34,12 @@ export default function StudentDashboard() {
     }
   }, [user]);
 
-  // --- NEW PAYMENT LOGIC ---
   const handlePayment = async (booking) => {
     try {
+      setMsg("Initiating payment...");
+      
       const paymentRequest = {
-        studentId: user.id,
+        studentId: user.id, 
         placeId: booking.placeId,
         bookingId: booking.id,
         amount: booking.placePrice,
@@ -39,42 +47,56 @@ export default function StudentDashboard() {
         type: "BOARDING_FEE"
       };
 
-      // Call your Spring Boot backend
-      const response = await axios.post('http://localhost:8080/api/payments/create', paymentRequest);
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+      const response = await axios.post(`${apiUrl}/api/payments/create`, paymentRequest);
       const data = response.data;
 
+      // Validation check for backend response
+      if (!data.hash || !data.merchantId) {
+        setMsg("Error: Missing security keys from server.");
+        return;
+      }
+
       const paymentConfig = {
-        "sandbox": true,
+        "sandbox": true, 
         "merchant_id": data.merchantId,
         "return_url": "http://localhost:3000/payment-success",
         "cancel_url": "http://localhost:3000/student/dashboard",
-        "notify_url": "http://localhost:8080/api/payments/notify",
+        "notify_url": `${apiUrl}/api/payments/notify`,
         "order_id": data.transactionRef,
         "items": `Booking for ${booking.placeName}`,
         "amount": data.amount,
         "currency": "LKR",
         "hash": data.hash,
-        "first_name": user.name,
-        "last_name": "",
+        "first_name": user.name || "Student",
+        "last_name": "User",
         "email": user.email || "test@example.com",
         "phone": "0771234567",
-        "address": "Colombo",
-        "city": "Colombo",
+        "address": "Moratuwa",
+        "city": "Moratuwa",
         "country": "Sri Lanka",
       };
 
       window.payhere.onCompleted = function onCompleted(orderId) {
+        console.log("Payment completed. OrderID: " + orderId);
         window.location.href = "/payment-success";
+      };
+
+      window.payhere.onDismissed = function onDismissed() {
+        setMsg("Payment window closed.");
+      };
+
+      window.payhere.onError = function onError(error) {
+        setMsg("PayHere Error: " + error);
       };
 
       window.payhere.startPayment(paymentConfig);
 
     } catch (err) {
       console.error("Payment initiation failed", err);
-      setMsg("Failed to start payment process.");
+      setMsg("Failed to start payment: " + (err.response?.data?.message || "Check connection"));
     }
   };
-  // -------------------------
 
   const handleCancelBooking = async (id) => {
     try {
@@ -86,7 +108,11 @@ export default function StudentDashboard() {
   const handleSubmitIssue = async (e) => {
     e.preventDefault();
     try {
-      await submitIssue({ studentId: user.id, placeId: Number(issueForm.placeId), description: issueForm.description });
+      await submitIssue({ 
+        studentId: user.id, 
+        placeId: Number(issueForm.placeId), 
+        description: issueForm.description 
+      });
       setMsg('Issue submitted successfully');
       setIssueForm({ placeId: '', description: '' });
       getStudentIssues(user.id).then(r => setIssues(r.data));
@@ -95,7 +121,10 @@ export default function StudentDashboard() {
   };
 
   const statusBadge = (status) => {
-    const map = { REQUESTED: 'badge-warning', CONFIRMED: 'badge-info', ACTIVE: 'badge-success', COMPLETED: 'badge-neutral', CANCELLED: 'badge-danger', SUCCESSFUL: 'badge-success', RECEIPT_GENERATED: 'badge-success', CREATED: 'badge-warning', PROCESSING: 'badge-info', FAILED: 'badge-danger', SUBMITTED: 'badge-warning', ASSIGNED: 'badge-info', IN_PROGRESS: 'badge-info', RESOLVED: 'badge-success', CLOSED: 'badge-neutral' };
+    const map = { 
+      REQUESTED: 'badge-warning', CONFIRMED: 'badge-info', ACTIVE: 'badge-success', 
+      COMPLETED: 'badge-neutral', CANCELLED: 'badge-danger', SUCCESSFUL: 'badge-success' 
+    };
     return <span className={`badge ${map[status] || 'badge-neutral'}`}>{status}</span>;
   };
 
@@ -104,15 +133,27 @@ export default function StudentDashboard() {
       <div className="dash-header">
         <div>
           <h1>Welcome back, {user?.name}</h1>
-          <p>Manage your boarding place, payments, and more</p>
+          <p>ID: {user?.id} | Role: Student</p>
         </div>
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card"><div className="stat-icon blue"><HiOutlineHome /></div><div><div className="stat-value">{stats.activeBookings || 0}</div><div className="stat-label">Active Bookings</div></div></div>
-        <div className="stat-card"><div className="stat-icon green"><HiOutlineCurrencyDollar /></div><div><div className="stat-value">{stats.totalPayments || 0}</div><div className="stat-label">Total Payments</div></div></div>
-        <div className="stat-card"><div className="stat-icon amber"><HiOutlineExclamationCircle /></div><div><div className="stat-value">{stats.pendingIssues || 0}</div><div className="stat-label">Pending Issues</div></div></div>
-        <div className="stat-card"><div className="stat-icon purple"><HiOutlineClipboardDocumentList /></div><div><div className="stat-value">{bookings.length}</div><div className="stat-label">Total Bookings</div></div></div>
+        <div className="stat-card">
+          <div className="stat-icon blue"><HiOutlineHome /></div>
+          <div><div className="stat-value">{stats.activeBookings || 0}</div><div className="stat-label">Active Bookings</div></div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon green"><HiOutlineCurrencyDollar /></div>
+          <div><div className="stat-value">{stats.totalPayments || 0}</div><div className="stat-label">Total Payments</div></div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon amber"><HiOutlineExclamationCircle /></div>
+          <div><div className="stat-value">{stats.pendingIssues || 0}</div><div className="stat-label">Pending Issues</div></div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon purple"><HiOutlineClipboardDocumentList /></div>
+          <div><div className="stat-value">{bookings.length}</div><div className="stat-label">Total Bookings</div></div>
+        </div>
       </div>
 
       <div className="dash-tabs">
@@ -122,17 +163,19 @@ export default function StudentDashboard() {
         <button className={`dash-tab ${tab === 'issues' ? 'active' : ''}`} onClick={() => setTab('issues')}>Issues</button>
       </div>
 
+      {msg && <div className="status-msg">{msg}</div>}
+
       {tab === 'overview' && (
         <div className="dash-section">
           <h2>Recent Bookings</h2>
           {bookings.length === 0 ? (
-            <div className="dash-empty"><h3>No bookings yet</h3><p>Browse boarding places to make your first booking</p></div>
+            <div className="dash-empty"><h3>No bookings yet</h3></div>
           ) : (
             <table className="dash-table">
-              <thead><tr><th>Place</th><th>Location</th><th>Start Date</th><th>Status</th></tr></thead>
+              <thead><tr><th>Place</th><th>Location</th><th>Status</th></tr></thead>
               <tbody>
                 {bookings.slice(0, 5).map(b => (
-                  <tr key={b.id}><td>{b.placeName}</td><td>{b.placeLocation}</td><td>{b.startDate}</td><td>{statusBadge(b.status)}</td></tr>
+                  <tr key={b.id}><td>{b.placeName}</td><td>{b.placeLocation}</td><td>{statusBadge(b.status)}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -143,110 +186,48 @@ export default function StudentDashboard() {
       {tab === 'bookings' && (
         <div className="dash-section">
           <h2>All Bookings</h2>
-          {bookings.length === 0 ? (
-            <div className="dash-empty"><h3>No bookings</h3><p>Browse boarding places to get started</p></div>
-          ) : (
-            <table className="dash-table">
-              <thead><tr><th>Place</th><th>Location</th><th>Price</th><th>Start</th><th>End</th><th>Status</th><th>Action</th></tr></thead>
-              <tbody>
-                {bookings.map(b => (
-                  <tr key={b.id}>
-                    <td>{b.placeName}</td>
-                    <td>{b.placeLocation}</td>
-                    <td>LKR {b.placePrice?.toLocaleString()}</td>
-                    <td>{b.startDate}</td>
-                    <td>{b.endDate || '—'}</td>
-                    <td>{statusBadge(b.status)}</td>
-                    <td style={{ display: 'flex', gap: '8px' }}>
-                      {/* PAY NOW BUTTON */}
-                      {b.status === 'CONFIRMED' && (
-                        <button className="btn btn-primary btn-sm" onClick={() => handlePayment(b)}>
-                          <HiOutlineCreditCard /> <span className="btn-label">Pay Now</span>
-                        </button>
-                      )}
-                      
-                      {(b.status === 'REQUESTED' || b.status === 'CONFIRMED') && (
-                        <button className="btn btn-danger btn-sm" onClick={() => handleCancelBooking(b.id)}>
-                          <HiOutlineXMark /> <span className="btn-label">Cancel</span>
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <table className="dash-table">
+            <thead><tr><th>Place</th><th>Price</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              {bookings.map(b => (
+                <tr key={b.id}>
+                  <td>{b.placeName}</td>
+                  <td>LKR {b.placePrice?.toLocaleString()}</td>
+                  <td>{statusBadge(b.status)}</td>
+                  <td className="actions-cell">
+                    {b.status === 'CONFIRMED' && (
+                      <button className="btn btn-primary btn-sm" onClick={() => handlePayment(b)}>
+                        <HiOutlineCreditCard /> Pay Now
+                      </button>
+                    )}
+                    {(b.status === 'REQUESTED' || b.status === 'CONFIRMED') && (
+                      <button className="btn btn-danger btn-sm" onClick={() => handleCancelBooking(b.id)}>
+                        <HiOutlineXMark /> Cancel
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
       {tab === 'payments' && (
         <div className="dash-section">
           <h2>Payment History</h2>
-          {payments.length === 0 ? (
-            <div className="dash-empty"><h3>No payments yet</h3><p>Your payment history will appear here</p></div>
-          ) : (
-            <table className="dash-table">
-              <thead><tr><th>Place</th><th>Amount</th><th>Type</th><th>Method</th><th>Status</th><th>Date</th><th>Ref</th></tr></thead>
-              <tbody>
-                {payments.map(p => (
-                  <tr key={p.id}>
-                    <td>{p.placeName}</td>
-                    <td>LKR {p.amount?.toLocaleString()}</td>
-                    <td>{p.type}</td>
-                    <td>{p.method}</td>
-                    <td>{statusBadge(p.status)}</td>
-                    <td>{p.paidAt ? new Date(p.paidAt).toLocaleDateString() : '—'}</td>
-                    <td style={{fontSize: 12, fontFamily: 'monospace'}}>{p.transactionRef}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {tab === 'issues' && (
-        <div className="dash-section">
-          <h2>Report & Track Issues</h2>
-          {msg && <div className="auth-error" style={{marginBottom: 16, background: msg.includes('success') ? '#d1fae5' : undefined, color: msg.includes('success') ? '#065f46' : undefined}}>{msg}</div>}
-          <form onSubmit={handleSubmitIssue} style={{marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap'}}>
-            <select
-              className="form-group"
-              style={{padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: '0 0 200px'}}
-              required
-              value={issueForm.placeId}
-              onChange={e => setIssueForm({...issueForm, placeId: e.target.value})}
-            >
-              <option value="">Select Boarding Place</option>
-              {[...new Map(
-                bookings
-                  .filter(b => b.status === 'CONFIRMED' || b.status === 'ACTIVE')
-                  .map(b => [b.placeId, b])
-              ).values()].map(b => (
-                <option key={b.placeId} value={b.placeId}>{b.placeName}</option>
+          <table className="dash-table">
+            <thead><tr><th>Place</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+              {payments.map(p => (
+                <tr key={p.id}>
+                  <td>{p.placeName}</td>
+                  <td>LKR {p.amount?.toLocaleString()}</td>
+                  <td>{statusBadge(p.status)}</td>
+                </tr>
               ))}
-            </select>
-            <input className="form-group" style={{padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: 1}} placeholder="Describe the issue..." required value={issueForm.description} onChange={e => setIssueForm({...issueForm, description: e.target.value})} />
-            <button type="submit" className="btn btn-primary"><HiOutlinePaperAirplane /> <span className="btn-label">Submit Issue</span></button>
-          </form>
-          {issues.length === 0 ? (
-            <div className="dash-empty"><h3>No issues reported</h3><p>Report maintenance issues here and track their progress</p></div>
-          ) : (
-            <table className="dash-table">
-              <thead><tr><th>Place</th><th>Description</th><th>Status</th><th>Reply</th><th>Submitted</th></tr></thead>
-              <tbody>
-                {issues.map(i => (
-                  <tr key={i.id}>
-                    <td>{i.placeName}</td>
-                    <td>{i.description}</td>
-                    <td>{statusBadge(i.status)}</td>
-                    <td>{i.reply || '—'}</td>
-                    <td>{new Date(i.createdAt).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+            </tbody>
+          </table>
         </div>
       )}
     </main>
