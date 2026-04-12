@@ -37,6 +37,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/places", "/api/places/search", "/api/places/recommendations", "/api/places/{id}").permitAll()
                 .requestMatchers("/api/universities/**").permitAll()
                 .requestMatchers("/api/images/**").permitAll()
+                // ADDED: Allow access to payment endpoints to fix the 403 error
+                .requestMatchers("/api/payments/**").permitAll() 
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
