@@ -1,5 +1,5 @@
 package com.fivebits.fivebits_backend.config;
-
+// Verified PayHere integration and security endpoints - April 2026
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
