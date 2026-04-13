@@ -34,6 +34,10 @@ public class BookingService {
         BoardingPlace place = placeRepository.findById(request.getPlaceId())
                 .orElseThrow(() -> new RuntimeException("Boarding place not found"));
 
+        if (place.isAllowBidding()) {
+            throw new RuntimeException("This place requires bidding. Please submit a bid instead of booking directly.");
+        }
+
         if (place.getAvailableRooms() <= 0) {
             throw new RuntimeException("No rooms available at this boarding place");
         }

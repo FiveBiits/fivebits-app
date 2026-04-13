@@ -6,6 +6,7 @@ import { createBooking } from '../services/bookingService';
 import { HiOutlineLocationMarker, HiOutlineStar, HiOutlineHome, HiOutlineAcademicCap } from 'react-icons/hi';
 import { HiXMark, HiOutlineAdjustmentsHorizontal, HiOutlineBuildingOffice, HiOutlineMapPin, HiOutlineBookOpen, HiOutlineMagnifyingGlass, HiOutlineArrowPath } from 'react-icons/hi2';
 import LocationMap from '../components/LocationMap';
+import BiddingPanel from '../components/BiddingPanel';
 import '../styles/browse.css';
 
 function PlaceCard({ place, isReco, selectedUni, onSelect, onBook }) {
@@ -15,6 +16,8 @@ function PlaceCard({ place, isReco, selectedUni, onSelect, onBook }) {
     : place.nearestUniversityName
       ? `${place.distanceToUniversity} km to ${place.nearestUniversityName}`
       : null;
+
+  const biddingRequired = place.allowBidding;
 
   return (
     <div className={`place-card ${isReco ? 'place-card-reco' : ''}`} onClick={() => onSelect(place)}>
@@ -52,7 +55,18 @@ function PlaceCard({ place, isReco, selectedUni, onSelect, onBook }) {
 
         <div className="place-card-footer">
           <div className="place-card-price">LKR {place.price?.toLocaleString()}<span>/mo</span></div>
-          <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); onBook(place.id); }}><HiOutlineBookOpen /> <span className="btn-label">Book</span></button>
+          <button
+            className={`btn btn-primary btn-sm ${biddingRequired ? 'btn-outline' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (biddingRequired) {
+                onSelect(place);
+              } else {
+                onBook(place.id);
+              }
+            }}>
+            <HiOutlineBookOpen /> <span className="btn-label">{biddingRequired ? 'Bid Required' : 'Book'}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -157,6 +171,12 @@ export default function Browse() {
 
   const handleBook = async (placeId) => {
     if (!user) { setBookingMsg('Please sign in to book'); return; }
+    const place = places.find(p => p.id === placeId);
+    if (place?.allowBidding) {
+      setBookingMsg('This place requires bidding. Please submit a bid instead of booking directly.');
+      setTimeout(() => setBookingMsg(''), 4000);
+      return;
+    }
     try {
       await createBooking({ studentId: user.id, placeId, startDate: new Date().toISOString().split('T')[0] });
       setBookingMsg('Booking request sent successfully!');
@@ -389,8 +409,24 @@ export default function Browse() {
               <p className="place-modal-desc">{selectedPlace.description}</p>
             )}
 
+            {selectedPlace.allowBidding && (
+              <>
+                <BiddingPanel placeId={selectedPlace.id} originalPrice={selectedPlace.price} ownerId={selectedPlace.ownerId} refreshPlaces={loadAllPlaces} />
+                <div className="place-modal-alert place-modal-alert-warning">
+                  This place requires bidding before a booking can be created. Submit a bid using the bidding panel above.
+                </div>
+              </>
+            )}
+
             {user?.userType === 'STUDENT' && (
-              <button className="btn btn-primary btn-lg place-modal-book" onClick={async () => { await handleBook(selectedPlace.id); setSelectedPlace(null); }}>
+              <button
+                className="btn btn-primary btn-lg place-modal-book"
+                disabled={selectedPlace.allowBidding}
+                onClick={async () => {
+                  if (selectedPlace.allowBidding) return;
+                  await handleBook(selectedPlace.id);
+                  setSelectedPlace(null);
+                }}>
                 <HiOutlineBookOpen /> <span className="btn-label">Request Booking</span>
               </button>
             )}

@@ -179,6 +179,14 @@ public class BoardingPlaceService {
         return toResponse(placeRepository.save(place), null, null, universityRepository.findAll());
     }
 
+    @Transactional
+    public void updateAllowBidding(Long placeId, boolean allowBidding) {
+        BoardingPlace place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new RuntimeException("Boarding place not found"));
+        place.setAllowBidding(allowBidding);
+        placeRepository.save(place);
+    }
+
     private BoardingPlaceResponse toResponse(BoardingPlace place, Double distance, Double rankScore, List<University> universities) {
         BoardingPlaceResponse resp = new BoardingPlaceResponse();
         resp.setId(place.getId());
@@ -200,6 +208,7 @@ public class BoardingPlaceService {
         resp.setCreatedAt(place.getCreatedAt());
         resp.setDistance(distance);
         resp.setRankScore(rankScore);
+        resp.setAllowBidding(place.isAllowBidding());
 
         // Populate images
         List<BoardingPlaceImage> images = imageRepository.findByPlaceIdOrderByDisplayOrder(place.getId());

@@ -94,4 +94,14 @@ public class BoardingPlaceController {
     public ResponseEntity<BoardingPlaceResponse> verifyPlace(@PathVariable Long id) {
         return ResponseEntity.ok(placeService.verifyPlace(id));
     }
+
+    @PatchMapping("/{id}/bidding-toggle")
+    public ResponseEntity<?> toggleBidding(@PathVariable Long id, @RequestParam boolean allowBidding) {
+        try {
+            placeService.updateAllowBidding(id, allowBidding);
+            return ResponseEntity.ok("Bidding setting updated successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
