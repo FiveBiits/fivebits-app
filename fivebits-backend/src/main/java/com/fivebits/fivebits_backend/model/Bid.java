@@ -1,6 +1,5 @@
 package com.fivebits.fivebits_backend.model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -17,57 +16,61 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "bookings")
+@Table(name = "bids")
 @Data
 @NoArgsConstructor
-public class Booking {
+public class Bid {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
-    private Student student;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = false)
     private BoardingPlace place;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bid_id", nullable = true)
-    private Bid bid; // NULL for direct bookings, populated if created from accepted bid
-
-    private LocalDate startDate;
-    private LocalDate endDate;
+    @JoinColumn(name = "student_id", nullable = false)
+    private Student student;
 
     @Column(nullable = false)
-    private String status;
+    private double offeredPrice;
+
+    @Column(nullable = false)
+    private String status; // PENDING, ACCEPTED, REJECTED, WITHDRAWN, EXPIRED
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    private LocalDateTime expiresAt;
+    private LocalDateTime acceptedAt;
+    private LocalDateTime rejectedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        if (this.status == null) this.status = "REQUESTED";
+        if (this.status == null) {
+            this.status = "PENDING";
+        }
     }
 
-    // Domain methods matching the state diagram
-    public void confirmBooking() {
-        this.status = "CONFIRMED";
+    // Domain methods
+    public void accept() {
+        this.status = "ACCEPTED";
+        this.acceptedAt = LocalDateTime.now();
     }
 
-    public void cancelBooking() {
-        this.status = "CANCELLED";
+    public void reject() {
+        this.status = "REJECTED";
+        this.rejectedAt = LocalDateTime.now();
     }
 
-    public void activateBooking() {
-        this.status = "ACTIVE";
+    public void withdraw() {
+        this.status = "WITHDRAWN";
     }
 
-    public void completeBooking() {
-        this.status = "COMPLETED";
+    public boolean isExpired() {
+        if (this.expiresAt == null) return false;
+        return LocalDateTime.now().isAfter(this.expiresAt) && "PENDING".equals(this.status);
     }
 }
-

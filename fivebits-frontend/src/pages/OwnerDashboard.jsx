@@ -5,6 +5,7 @@ import { getOwnerPlaces, createPlace, updatePlace, deletePlace, uploadPlaceImage
 import { getOwnerBookings, confirmBooking, cancelBooking } from '../services/bookingService';
 import { getOwnerPayments } from '../services/paymentService';
 import { getOwnerIssues, resolveIssue } from '../services/issueService';
+import { getPlaceBids, acceptBid, rejectBid, toggleBidding } from '../services/biddingService';
 import { HiOutlineBuildingOffice, HiOutlineUsers, HiOutlineBanknotes, HiOutlineExclamationTriangle, HiPlus, HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineWrenchScrewdriver, HiOutlinePhoto, HiOutlineStar, HiOutlinePencilSquare } from 'react-icons/hi2';
 import MapPicker from '../components/MapPicker';
 import '../styles/dashboard.css';
@@ -16,6 +17,7 @@ export default function OwnerDashboard() {
   const [listings, setListings] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [bids, setBids] = useState([]);
   const [issues, setIssues] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [placeForm, setPlaceForm] = useState({ name:'', location:'', address:'', description:'', price:'', totalRooms:'', availableRooms:'', facilities:'', latitude: 0, longitude: 0 });
@@ -30,10 +32,27 @@ export default function OwnerDashboard() {
   const load = () => {
     if (!user?.id) return;
     getOwnerStats(user.id).then(r => setStats(r.data)).catch(() => {});
-    getOwnerPlaces(user.id).then(r => setListings(r.data)).catch(() => {});
+    getOwnerPlaces(user.id).then(r => {
+      setListings(r.data);
+      // Load bids for all places
+      loadAllBids(r.data);
+    }).catch(() => {});
     getOwnerBookings(user.id).then(r => setBookings(r.data)).catch(() => {});
     getOwnerPayments(user.id).then(r => setPayments(r.data)).catch(() => {});
     getOwnerIssues(user.id).then(r => setIssues(r.data)).catch(() => {});
+  };
+
+  const loadAllBids = async (places) => {
+    try {
+      const allBids = [];
+      for (const place of places) {
+        const res = await getPlaceBids(place.id);
+        allBids.push(...res.data);
+      }
+      setBids(allBids);
+    } catch (err) {
+      console.error('Failed to load bids', err);
+    }
   };
 
   useEffect(load, [user]);
@@ -135,6 +154,36 @@ export default function OwnerDashboard() {
     try { await resolveIssue(id, resolveReply[id] || ''); flash('Issue resolved'); load(); } catch (err) { flash('Failed to resolve'); }
   };
 
+  const handleAcceptBid = async (bidId) => {
+    try {
+      await acceptBid(bidId);
+      flash('Bid accepted! Booking created.');
+      load();
+    } catch (err) {
+      flash(err.response?.data || 'Failed to accept bid');
+    }
+  };
+
+  const handleRejectBid = async (bidId) => {
+    try {
+      await rejectBid(bidId);
+      flash('Bid rejected');
+      load();
+    } catch (err) {
+      flash('Failed to reject bid');
+    }
+  };
+
+  const handleToggleBidding = async (placeId, currentValue) => {
+    try {
+      await toggleBidding(placeId, !currentValue);
+      flash('Bidding setting updated');
+      load();
+    } catch (err) {
+      flash('Failed to update bidding setting');
+    }
+  };
+
   const statusBadge = (status) => {
     const map = { REQUESTED: 'badge-warning', CONFIRMED: 'badge-info', ACTIVE: 'badge-success', COMPLETED: 'badge-neutral', CANCELLED: 'badge-danger', SUCCESSFUL: 'badge-success', RECEIPT_GENERATED: 'badge-success', CREATED: 'badge-warning', PROCESSING: 'badge-info', FAILED: 'badge-danger', SUBMITTED: 'badge-warning', ASSIGNED: 'badge-info', IN_PROGRESS: 'badge-info', RESOLVED: 'badge-success', CLOSED: 'badge-neutral' };
     return <span className={`badge ${map[status] || 'badge-neutral'}`}>{status}</span>;
@@ -182,6 +231,7 @@ export default function OwnerDashboard() {
         <button className={`dash-tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
         <button className={`dash-tab ${tab === 'listings' ? 'active' : ''}`} onClick={() => setTab('listings')}>My Listings</button>
         <button className={`dash-tab ${tab === 'bookings' ? 'active' : ''}`} onClick={() => setTab('bookings')}>Bookings</button>
+        <button className={`dash-tab ${tab === 'bids' ? 'active' : ''}`} onClick={() => setTab('bids')}>Bids</button>
         <button className={`dash-tab ${tab === 'payments' ? 'active' : ''}`} onClick={() => setTab('payments')}>Payments</button>
         <button className={`dash-tab ${tab === 'issues' ? 'active' : ''}`} onClick={() => setTab('issues')}>Issues</button>
       </div>
@@ -275,6 +325,9 @@ export default function OwnerDashboard() {
                   </div>
                   <div className="listing-actions">
                     <button className="btn btn-outline btn-sm" onClick={() => editingPlace === l.id ? cancelEditing() : startEditing(l)}><HiOutlinePencilSquare /> <span className="btn-label">{editingPlace === l.id ? 'Cancel' : 'Edit'}</span></button>
+                    <button className={`btn btn-sm ${l.allowBidding ? 'btn-primary' : 'btn-outline'}`} onClick={() => handleToggleBidding(l.id, l.allowBidding)} title={l.allowBidding ? 'Bidding enabled' : 'Bidding disabled'}>
+                      <span className="btn-label">{l.allowBidding ? '💰 Bidding ON' : '💰 Bidding OFF'}</span>
+                    </button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleDeletePlace(l.id)}><HiOutlineTrash /> <span className="btn-label">Delete</span></button>
                   </div>
                 </div>
@@ -364,6 +417,36 @@ export default function OwnerDashboard() {
                     <td>{b.endDate || '—'}</td>
                     <td>{statusBadge(b.status)}</td>
                     <td>{b.status === 'REQUESTED' && <><button className="btn btn-success btn-sm" onClick={() => handleConfirm(b.id)}><HiOutlineCheck /> <span className="btn-label">Confirm</span></button>{' '}<button className="btn btn-danger btn-sm" onClick={() => handleCancel(b.id)}><HiOutlineXMark /> <span className="btn-label">Decline</span></button></>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'bids' && (
+        <div className="dash-section">
+          <h2>Incoming Bids</h2>
+          {bids.filter(b => b.status === 'PENDING').length === 0 ? (
+            <div className="dash-empty"><h3>No pending bids</h3></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Student</th><th>Place</th><th>Offered Price</th><th>Original Price</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+              <tbody>
+                {bids.filter(b => b.status === 'PENDING').map(b => (
+                  <tr key={b.id}>
+                    <td>{b.studentName}</td>
+                    <td>{b.placeName}</td>
+                    <td>LKR {b.offeredPrice?.toLocaleString()}</td>
+                    <td>LKR {b.originalPrice?.toLocaleString()}</td>
+                    <td>{statusBadge(b.status)}</td>
+                    <td>{new Date(b.createdAt).toLocaleDateString()}</td>
+                    <td className="actions-cell">
+                      <button className="btn btn-success btn-sm" onClick={() => handleAcceptBid(b.id)}><HiOutlineCheck /> <span className="btn-label">Accept</span></button>
+                      {' '}
+                      <button className="btn btn-danger btn-sm" onClick={() => handleRejectBid(b.id)}><HiOutlineXMark /> <span className="btn-label">Reject</span></button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

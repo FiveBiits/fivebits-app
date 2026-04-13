@@ -67,6 +67,12 @@ public class BoardingPlace {
     @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings = new ArrayList<>();
 
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Bid> bids = new ArrayList<>();
+
+    @Column(nullable = false)
+    private boolean allowBidding = false;  // Opt-in model: owners must manually enable bidding
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

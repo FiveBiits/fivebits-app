@@ -4,15 +4,16 @@ import { getStudentStats } from '../services/dashboardService';
 import { getStudentBookings, cancelBooking } from '../services/bookingService';
 import { getStudentPayments } from '../services/paymentService';
 import { getStudentIssues, submitIssue } from '../services/issueService';
-import { 
-  HiOutlineHome, 
-  HiOutlineCurrencyDollar, 
-  HiOutlineExclamationCircle, 
-  HiOutlineClipboardDocumentList, 
-  HiOutlineXMark, 
-  HiOutlineCreditCard 
+import { getStudentBids, withdrawBid } from '../services/biddingService';
+import {
+  HiOutlineHome,
+  HiOutlineCurrencyDollar,
+  HiOutlineExclamationCircle,
+  HiOutlineClipboardDocumentList,
+  HiOutlineXMark,
+  HiOutlineCreditCard
 } from 'react-icons/hi2';
-import axios from 'axios'; 
+import axios from 'axios';
 import '../styles/dashboard.css';
 
 export default function StudentDashboard() {
@@ -21,6 +22,7 @@ export default function StudentDashboard() {
   const [stats, setStats] = useState({});
   const [bookings, setBookings] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [bids, setBids] = useState([]);
   const [issues, setIssues] = useState([]);
   const [issueForm, setIssueForm] = useState({ placeId: '', description: '' });
   const [msg, setMsg] = useState('');
@@ -30,6 +32,7 @@ export default function StudentDashboard() {
       getStudentStats(user.id).then(r => setStats(r.data)).catch(() => {});
       getStudentBookings(user.id).then(r => setBookings(r.data)).catch(() => {});
       getStudentPayments(user.id).then(r => setPayments(r.data)).catch(() => {});
+      getStudentBids(user.id).then(r => setBids(r.data)).catch(() => {});
       getStudentIssues(user.id).then(r => setIssues(r.data)).catch(() => {});
     }
   }, [user]);
@@ -108,16 +111,25 @@ export default function StudentDashboard() {
   const handleSubmitIssue = async (e) => {
     e.preventDefault();
     try {
-      await submitIssue({ 
-        studentId: user.id, 
-        placeId: Number(issueForm.placeId), 
-        description: issueForm.description 
+      await submitIssue({
+        studentId: user.id,
+        placeId: Number(issueForm.placeId),
+        description: issueForm.description
       });
       setMsg('Issue submitted successfully');
       setIssueForm({ placeId: '', description: '' });
       getStudentIssues(user.id).then(r => setIssues(r.data));
       setTimeout(() => setMsg(''), 3000);
     } catch (err) { setMsg(err.response?.data || 'Failed to submit issue'); }
+  };
+
+  const handleWithdrawBid = async (bidId) => {
+    try {
+      await withdrawBid(bidId);
+      setMsg('Bid withdrawn successfully');
+      getStudentBids(user.id).then(r => setBids(r.data));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (err) { setMsg('Failed to withdraw bid'); }
   };
 
   const statusBadge = (status) => {
@@ -159,6 +171,7 @@ export default function StudentDashboard() {
       <div className="dash-tabs">
         <button className={`dash-tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
         <button className={`dash-tab ${tab === 'bookings' ? 'active' : ''}`} onClick={() => setTab('bookings')}>My Bookings</button>
+        <button className={`dash-tab ${tab === 'bids' ? 'active' : ''}`} onClick={() => setTab('bids')}>My Bids</button>
         <button className={`dash-tab ${tab === 'payments' ? 'active' : ''}`} onClick={() => setTab('payments')}>Payments</button>
         <button className={`dash-tab ${tab === 'issues' ? 'active' : ''}`} onClick={() => setTab('issues')}>Issues</button>
       </div>
@@ -213,6 +226,37 @@ export default function StudentDashboard() {
         </div>
       )}
 
+      {tab === 'bids' && (
+        <div className="dash-section">
+          <h2>My Bids</h2>
+          {bids.length === 0 ? (
+            <div className="dash-empty"><h3>No bids yet</h3></div>
+          ) : (
+            <table className="dash-table">
+              <thead><tr><th>Place</th><th>Offered Price</th><th>Original Price</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+              <tbody>
+                {bids.map(b => (
+                  <tr key={b.id}>
+                    <td>{b.placeName}</td>
+                    <td>LKR {b.offeredPrice?.toLocaleString()}</td>
+                    <td>LKR {b.originalPrice?.toLocaleString()}</td>
+                    <td>{statusBadge(b.status)}</td>
+                    <td>{new Date(b.createdAt).toLocaleDateString()}</td>
+                    <td className="actions-cell">
+                      {b.status === 'PENDING' && (
+                        <button className="btn btn-danger btn-sm" onClick={() => handleWithdrawBid(b.id)}>
+                          <HiOutlineXMark /> Withdraw
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
       {tab === 'payments' && (
         <div className="dash-section">
           <h2>Payment History</h2>
@@ -224,6 +268,24 @@ export default function StudentDashboard() {
                   <td>{p.placeName}</td>
                   <td>LKR {p.amount?.toLocaleString()}</td>
                   <td>{statusBadge(p.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'issues' && (
+        <div className="dash-section">
+          <h2>Support Issues</h2>
+          <table className="dash-table">
+            <thead><tr><th>Place</th><th>Description</th><th>Status</th></tr></thead>
+            <tbody>
+              {issues.map(issue => (
+                <tr key={issue.id}>
+                  <td>{issue.placeName}</td>
+                  <td>{issue.description}</td>
+                  <td>{statusBadge(issue.status)}</td>
                 </tr>
               ))}
             </tbody>

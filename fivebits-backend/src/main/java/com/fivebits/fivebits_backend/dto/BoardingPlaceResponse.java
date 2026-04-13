@@ -34,4 +34,5 @@ public class BoardingPlaceResponse {
     private Double rankScore;
     private String nearestUniversityName;
     private Double distanceToUniversity;
+    private boolean allowBidding;
 }
