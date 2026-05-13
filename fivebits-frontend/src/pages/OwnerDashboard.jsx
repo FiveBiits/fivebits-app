@@ -326,7 +326,7 @@ export default function OwnerDashboard() {
                   <div className="listing-actions">
                     <button className="btn btn-outline btn-sm" onClick={() => editingPlace === l.id ? cancelEditing() : startEditing(l)}><HiOutlinePencilSquare /> <span className="btn-label">{editingPlace === l.id ? 'Cancel' : 'Edit'}</span></button>
                     <button className={`btn btn-sm ${l.allowBidding ? 'btn-primary' : 'btn-outline'}`} onClick={() => handleToggleBidding(l.id, l.allowBidding)} title={l.allowBidding ? 'Bidding enabled' : 'Bidding disabled'}>
-                      <span className="btn-label">{l.allowBidding ? 'Bid ON' : 'Bid OFF'}</span>
+                      <HiOutlineBanknotes /> <span className="btn-label">{l.allowBidding ? 'Bid ON' : 'Bid OFF'}</span>
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleDeletePlace(l.id)}><HiOutlineTrash /> <span className="btn-label">Delete</span></button>
                   </div>

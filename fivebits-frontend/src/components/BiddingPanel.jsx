@@ -148,7 +148,7 @@ export default function BiddingPanel({ placeId, originalPrice, ownerId, refreshP
               <div className="bidding-min-hint">Minimum: <strong>LKR {Math.ceil(currentMinBid).toLocaleString()}</strong></div>
             </div>
             <button type="submit" className="btn btn-primary bidding-btn" disabled={loading}>
-              {loading ? 'Placing...' : 'Place Bid'}
+              <HiOutlineCurrencyDollar size={16} /> <span className="btn-label">{loading ? 'Placing...' : 'Place Bid'}</span>
             </button>
           </form>
         )}
