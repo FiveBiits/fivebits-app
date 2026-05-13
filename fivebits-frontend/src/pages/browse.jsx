@@ -412,9 +412,6 @@ export default function Browse() {
             {selectedPlace.allowBidding && (
               <>
                 <BiddingPanel placeId={selectedPlace.id} originalPrice={selectedPlace.price} ownerId={selectedPlace.ownerId} refreshPlaces={loadAllPlaces} />
-                <div className="place-modal-alert place-modal-alert-warning">
-                  This place requires bidding before a booking can be created. Submit a bid using the bidding panel above.
-                </div>
               </>
             )}
 

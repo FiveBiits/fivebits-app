@@ -109,6 +109,11 @@
   color: #9ca3af;
 }
 
+.bidding-min-hint {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
 .bidding-btn {
   padding: 8px 16px;
   font-size: 13px;
